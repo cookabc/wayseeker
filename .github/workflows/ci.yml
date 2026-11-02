@@ -2,10 +2,49 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# main 上的每个提交都必须完整跑完，因此只在非 main 分支取消进行中的运行。
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # 只改文档的提交不跑代码检查，但必须让必需检查有结论，否则 PR 会一直卡在 pending。
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.decide.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name != 'workflow_dispatch'
+      - uses: dorny/paths-filter@15192bc058cc28a13dbf6cde61f19e18988b7af6 # v3
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!LICENSE'
+      - id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=${{ steps.filter.outputs.code }}" >> "$GITHUB_OUTPUT"
+          fi
+
   check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -26,6 +65,8 @@ jobs:
         run: pnpm run check
 
   browser:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Production browser checks / desktop and mobile
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -37,6 +78,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # 缓存浏览器本体，避免网络抖动时重下。
+      - name: Cache Playwright browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pw-${{ runner.os }}-
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm run test:e2e
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -45,3 +93,27 @@ jobs:
           name: browser-failure-traces
           path: test-results/
           retention-days: 7
+
+  # 唯一可以配置为必需检查的 job：无论代码是否被跳过都给出结论。
+  ci-gate:
+    if: always()
+    needs: [changes, check, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify required checks
+        run: |
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "::error::path filter job did not succeed (${{ needs.changes.result }})"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.code }}" = "false" ]; then
+            echo "Docs-only change: code checks skipped by design."
+            exit 0
+          fi
+          for result in "${{ needs.check.result }}" "${{ needs.browser.result }}"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::code checks did not pass ($result)"
+              exit 1
+            fi
+          done
