@@ -1,0 +1,22 @@
+{
+  "back": "Back home",
+  "lastUpdated": "Last updated",
+  "date": "July 17, 2026",
+  "contact": "Questions:",
+  "period": ".",
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "{{site}} does not collect personal data, run analytics, or serve advertising cookies. The site only stores preferences on your device so the experience stays familiar between visits.",
+    "storageIntro": "Specifically, we may use:",
+    "themeStorage": "<storage>localStorage</storage> for theme preference (<key>wayseeker-theme</key>)",
+    "languageStorage": "<storage>cookie / localStorage</storage> for language preference (i18next)",
+    "external": "When you open a tool link, you leave this site and visit the tool provider's website. We are not responsible for the privacy practices of external sites.",
+    "changes": "If this policy changes, we will update the date above."
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "intro": "{{site}} is a curated directory of third-party tools and resources. Links are provided for convenience and informational purposes only.",
+    "external": "We do not endorse, operate, or control the external tools listed. Use them at your own risk and review each provider's terms of service and privacy policy. Tool availability, pricing, and features may change or break without notice.",
+    "ownership": "The content on this site is provided \"as is\" without warranties of any kind. We may update, reorder, or remove listings at any time. Site branding, copy, and presentation remain the property of {{site}}; third-party product names and trademarks belong to their respective owners."
+  }
+}

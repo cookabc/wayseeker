@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Archivo, Fragment_Mono, Noto_Serif_SC } from 'next/font/google'
+import { cookies, headers } from 'next/headers'
 import { ThemeProvider } from 'next-themes'
+import { ActivateChineseFont } from '@/components/ActivateChineseFont'
 import { AppChrome } from '@/components/AppChrome'
 import { I18nProvider } from '@/components/I18nProvider'
+import { resolveRequestLanguage } from '@/lib/request-language'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
@@ -11,10 +14,12 @@ const archivo = Archivo({
     axes: ['wdth'],
     variable: '--font-archivo',
     display: 'swap',
+    preload: false,
 })
 const serifSc = Noto_Serif_SC({
     subsets: ['latin'],
-    weight: ['500', '700'],
+    // One variable face covers both display weights. Separate weight entries
+    // duplicate the entire CJK unicode-range stylesheet for the same files.
     variable: '--font-serif-sc',
     display: 'swap',
     preload: false,
@@ -24,6 +29,7 @@ const fragment = Fragment_Mono({
     weight: '400',
     variable: '--font-fragment',
     display: 'swap',
+    preload: false,
 })
 
 export const metadata: Metadata = {
@@ -61,15 +67,26 @@ export const viewport: Viewport = {
     initialScale: 1,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode
 }>) {
+    const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
+    const initialLanguage = resolveRequestLanguage(
+        cookieStore.get('i18next')?.value,
+        requestHeaders.get('accept-language'),
+    )
     return (
-        <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-            <body className={`${archivo.variable} ${serifSc.variable} ${fragment.variable} antialiased min-w-[320px]`}>
-                <I18nProvider>
+        <html
+            lang={initialLanguage}
+            className={`${archivo.variable} ${fragment.variable}`}
+            data-scroll-behavior="smooth"
+            suppressHydrationWarning
+        >
+            <body className="antialiased min-w-[320px]">
+                <ActivateChineseFont variableClass={serifSc.variable} />
+                <I18nProvider initialLanguage={initialLanguage}>
                     <ThemeProvider
                         attribute="class"
                         defaultTheme="system"
