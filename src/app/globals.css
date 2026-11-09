@@ -1385,9 +1385,15 @@
 }
 
 .rx-title {
-    font-size: clamp(2.75rem, 6.5vw, 5.5rem);
+    /* The longest title word ("PRESCRIPTION") must fit the intro column whole:
+       at 83px it measures 468px against a 448px column, which forced a mid-word
+       break ("PRESCRIPTIO/N") no overflow-wrap setting could avoid. 4.75rem
+       keeps the whole word at ~429px with headroom for font-rendering drift. */
+    font-size: clamp(2.5rem, 6vw, 4.75rem);
     text-transform: uppercase;
-    overflow-wrap: anywhere;
+    /* Break whole words first; a word is only split when it alone cannot fit
+       the column (narrow viewports), never to fill the previous line. */
+    overflow-wrap: break-word;
 }
 
 .rx-lede {
