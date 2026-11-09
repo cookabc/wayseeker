@@ -9,8 +9,9 @@
     "terms": "条款",
     "home": "首页",
     "primary": "页面分区",
-    "cabinet": "百子柜",
-    "prescription": "开方"
+    "cabinet": "找工具",
+    "prescription": "开方子",
+    "site": "网站导航"
   },
   "hero": {
     "title": "你在将就什么？",
@@ -18,7 +19,10 @@
     "stagesLabel": "按阶段查看将就",
     "fieldLabel": "将就清单，按抽屉编号",
     "keys": "换一格",
-    "keysColumn": "换一列"
+    "keysColumn": "换一列",
+    "allStages": "全部阶段",
+    "showAllHabits": "查看全部 {{count}} 种将就",
+    "showFewerHabits": "收起清单"
   },
   "counter": {
     "label": "取出的标签",
@@ -32,7 +36,8 @@
     "previewAlt": "{{name}} 首页截图",
     "for": "何时用",
     "replaces": "替代",
-    "caution": "注意"
+    "caution": "注意",
+    "selectionStatus": "{{name}}，{{stage}}，{{code}} 号抽屉。第 {{at}} / {{total}} 格。"
   },
   "cabinet": {
     "title": "百子柜",
@@ -43,7 +48,8 @@
     "matches_one": "{{count}} 格抽屉匹配",
     "matches_other": "{{count}} 格抽屉匹配",
     "noMatches": "没有匹配的抽屉。试试一种将就，比如「提示」或「动效」。",
-    "empty": "空抽屉"
+    "empty": "空抽屉",
+    "resetSearch": "查看全部抽屉"
   },
   "plan": {
     "title": "开一张方子",
@@ -54,10 +60,12 @@
     "swapLabel": "换掉「{{stage}}」这一行",
     "detail": "标签",
     "copy": "复制为 Markdown",
+    "copying": "正在复制…",
+    "clipboardPending": "剪贴板请求仍在等待浏览器响应。请检查授权提示，或手动复制文本。",
     "copied": "方子已复制",
     "copyLink": "复制链接",
     "linkCopied": "链接已复制",
-    "copyFailed": "暂时无法使用剪贴板，方子的链接就在地址栏里。",
+    "copyFailed": "暂时无法使用剪贴板。请选中并复制下方文本，或重试。",
     "anchor": "药引",
     "number": "编号",
     "instead": "不再",
@@ -70,7 +78,20 @@
       "ai": "给 Agent 打审美底子，从 {{name}} 起步",
       "ui": "从 {{name}} 起步的界面方案",
       "motion": "从 {{name}} 起步的动效方案"
-    }
+    },
+    "copyFallbackTitle": "手动复制",
+    "copyFallbackHint": "选中下方文本后复制，也可以重试。",
+    "buildAround": "围绕 {{name}} 开方",
+    "undo": "恢复上一张方子",
+    "undoHint": "离开或刷新本页前有效。",
+    "rewritten": "已重开方子，可以恢复上一张。",
+    "restored": "已恢复上一张方子。",
+    "builtAround": "已围绕 {{name}} 开方。",
+    "written": "方子已开好。",
+    "basis": "以 {{name}} 为起点，其他阶段优先推荐相近方向的工具；查看标签后，再决定是否适合。",
+    "sharedTags": "相关方向：{{tags}}",
+    "noSharedTags": "本阶段的独立推荐。",
+    "anchorBasis": "开方起点"
   },
   "detail": {
     "back": "回到百子柜",
@@ -82,7 +103,17 @@
     "imageDone": "图片已就绪",
     "github": "GitHub 源码",
     "whyIUseIt": "我为什么用它",
-    "curatorAttribution": "策展备注，{{domain}}"
+    "curatorAttribution": "策展备注，{{domain}}",
+    "copyingNote": "正在复制…",
+    "clipboardPending": "浏览器尚未完成复制；如有剪贴板权限提示，请先处理提示。",
+    "copyManually": "手动复制文字",
+    "renderingImage": "正在生成图片…",
+    "imageCopied": "图片已复制",
+    "imageDownloaded": "图片已下载",
+    "copyFailed": "无法使用剪贴板。请复制下方标签文本，或重试。",
+    "imageFailed": "图片生成失败。请重试，或复制标签文本。",
+    "manualLabel": "标签文本",
+    "manualHint": "选中文本后，使用浏览器菜单或键盘复制。"
   },
   "footer": {
     "meta": "{{count}} 件工具，人工归档，中英双语。"
@@ -103,5 +134,8 @@
     "body": "你访问的页面不存在或已被移动。",
     "cta": "回到百子柜",
     "resources": "站点资源"
+  },
+  "media": {
+    "previewUnavailable": "预览暂不可用"
   }
 }

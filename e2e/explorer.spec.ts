@@ -15,6 +15,8 @@ test('the address bar always links to the dispensed drawer', async ({ page }) =>
 
 test('habits, drawers and search all dispense the same label', async ({ page }) => {
     await page.goto('/')
+    const showAll = page.getByRole('button', { name: 'Show all 29 habits' })
+    if (await showAll.isVisible()) await showAll.click()
     await page.locator('.habit', { hasText: 'endless Awwwards tabs' }).click()
     await expect(page.locator('.slip-name')).toHaveText(/Craftwork Websites/i)
     await page.getByRole('button', { name: /Mobbin/ }).click()

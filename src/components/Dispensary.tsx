@@ -10,16 +10,19 @@ import {
     XIcon,
 } from '@phosphor-icons/react'
 import Link from 'next/link'
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { CopyFeedback } from '@/components/CopyFeedback'
 import { DrawerFront, EmptyDrawer } from '@/components/DrawerFront'
+import { ExplorerRouteObserver } from '@/components/ExplorerRouteObserver'
 import { HabitPeek } from '@/components/HabitPeek'
 import { normalizeLanguage } from '@/components/I18nProvider'
 import { LabelRows } from '@/components/LabelRows'
 import { ToolPreviewImage } from '@/components/ToolPreviewImage'
-import TOOLS from '@/data/tools'
+import TOOLS, { formatTag } from '@/data/tools'
 import { WORKFLOWS } from '@/data/workflow'
 import { useI18nReady } from '@/hooks/useI18nReady'
 import { CABINET_ROWS, DRAWERS, type Drawer, drawerOf, drawersInStage, habitOf, stageLetter } from '@/lib/drawers'
+import { toolDetailHref } from '@/lib/exploration-context'
 import { readExplorerRoute, writeExplorerRoute } from '@/lib/explorer-route'
 import { filterTools, getDomain } from '@/lib/filter-tools'
 import {
@@ -35,6 +38,22 @@ import { pointerEffectsEnabled, releasePointer, trackPointer } from '@/lib/point
 import { randomSeed } from '@/lib/shuffle'
 
 const DEFAULT_TOOL = 'timing'
+const INITIAL_HABIT_COUNT = 3
+
+interface PreviousPlan {
+    seed: string
+    picks: Array<string | null>
+    anchor: string | null
+}
+
+interface CopyFallback {
+    text: string
+    reason: 'failed' | 'manual'
+}
+
+function planIdentity(seed: string | null, picks: ReadonlyArray<string | null>, anchor: string | null) {
+    return JSON.stringify([seed, encodePlanPicks(picks), anchor])
+}
 
 function reducedMotion() {
     return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -47,10 +66,22 @@ export default function Dispensary() {
     const [selectedId, setSelectedId] = useState(DEFAULT_TOOL)
     const [stageFilter, setStageFilter] = useState<number | null>(null)
     const [query, setQuery] = useState('')
+    const [showAllHabits, setShowAllHabits] = useState(false)
+    const searchRef = useRef<HTMLInputElement>(null)
     const [planSeed, setPlanSeed] = useState<string | null>(null)
+    const [planAnchorId, setPlanAnchorId] = useState<string | null>(null)
     const [picks, setPicks] = useState<Array<string | null>>([])
+    const currentPlanIdentity = useRef(planIdentity(null, [], null))
+    const [previousPlan, setPreviousPlan] = useState<PreviousPlan | null>(null)
+    const [planNotice, setPlanNotice] = useState<'written' | 'rewritten' | 'restored' | 'builtAround' | null>(null)
     const [flash, setFlash] = useState<string | null>(null)
-    const [failed, setFailed] = useState(false)
+    const [failedCopy, setFailedCopy] = useState<CopyFallback | null>(null)
+    const [copying, setCopying] = useState<'plan' | 'planLink' | null>(null)
+    const [copyWaiting, setCopyWaiting] = useState(false)
+    const copyEpoch = useRef(0)
+    const pendingCopy = useRef<{ epoch: number; timer: ReturnType<typeof setTimeout> | null } | null>(null)
+    const copyMounted = useRef(true)
+    const syncedSearch = useRef<string | null>(null)
     const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const counterRef = useRef<HTMLElement>(null)
     const [peek, setPeek] = useState<{ tool: (typeof TOOLS)[number]; x: number; y: number } | null>(null)
@@ -79,30 +110,60 @@ export default function Dispensary() {
         return () => io.disconnect()
     }, [])
     const rxRef = useRef<HTMLElement>(null)
+    const planTitleRef = useRef<HTMLHeadingElement>(null)
+
+    const invalidateCopyFeedback = useCallback(() => {
+        copyEpoch.current += 1
+        if (flashTimer.current) clearTimeout(flashTimer.current)
+        setFlash(null)
+        setFailedCopy(null)
+    }, [])
+
+    useEffect(() => invalidateCopyFeedback(), [lang, invalidateCopyFeedback])
 
     // Restore shared state (?tool, ?plan, ?p; legacy ?seed is ignored) on load and history moves.
-    useEffect(() => {
-        const restore = () => {
-            const route = readExplorerRoute(
-                window.location.search,
-                TOOLS.map((tool) => tool.id),
-            )
-            if (route.tool) setSelectedId(route.tool)
-            setPlanSeed(route.plan)
-            setPicks(route.plan && route.picks ? [...parsePlanPicks(route.picks)] : [])
-            if (route.plan) {
-                requestAnimationFrame(() =>
-                    rxRef.current?.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth' }),
-                )
-            }
+    const restoreRoute = useCallback(() => {
+        if (syncedSearch.current === window.location.search) return
+        syncedSearch.current = window.location.search
+        const route = readExplorerRoute(
+            window.location.search,
+            TOOLS.map((tool) => tool.id),
+        )
+        setSelectedId(route.tool ?? DEFAULT_TOOL)
+        const params = new URLSearchParams(window.location.search)
+        setQuery(params.get('q')?.slice(0, 200) ?? '')
+        const restoredStage = params.get('stage')
+        setStageFilter(restoredStage !== null && /^[0-4]$/.test(restoredStage) ? Number(restoredStage) : null)
+        setPlanSeed(route.plan)
+        setPlanAnchorId(route.anchor ?? null)
+        const restoredPicks = route.plan && route.picks ? [...parsePlanPicks(route.picks)] : []
+        const restoredIdentity = planIdentity(route.plan, restoredPicks, route.anchor ?? null)
+        setPicks(restoredPicks)
+        if (restoredIdentity !== currentPlanIdentity.current) {
+            invalidateCopyFeedback()
+            setPreviousPlan(null)
+            setPlanNotice(null)
         }
-        restore()
-        window.addEventListener('popstate', restore)
+        currentPlanIdentity.current = restoredIdentity
+        if (route.plan && !window.location.hash) {
+            requestAnimationFrame(() =>
+                rxRef.current?.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth' }),
+            )
+        }
+    }, [invalidateCopyFeedback])
+
+    useEffect(() => {
+        copyMounted.current = true
+        restoreRoute()
+        window.addEventListener('popstate', restoreRoute)
         return () => {
-            window.removeEventListener('popstate', restore)
+            copyMounted.current = false
+            copyEpoch.current += 1
+            if (pendingCopy.current?.timer) clearTimeout(pendingCopy.current.timer)
+            window.removeEventListener('popstate', restoreRoute)
             if (flashTimer.current) clearTimeout(flashTimer.current)
         }
-    }, [])
+    }, [restoreRoute])
 
     const selected = drawerOf(selectedId) ?? DRAWERS[0]
     const stageDrawers = useMemo(() => drawersInStage(selected.stage), [selected.stage])
@@ -120,29 +181,45 @@ export default function Dispensary() {
         return ids
     }, [query])
 
-    const plan = useMemo(() => (planSeed ? generatePlan(planSeed, picks) : null), [planSeed, picks])
+    const plan = useMemo(
+        () => (planSeed ? generatePlan(planSeed, picks, planAnchorId) : null),
+        [planSeed, picks, planAnchorId],
+    )
 
     const say = (key: string) => {
         setFlash(key)
-        setFailed(false)
+        setFailedCopy(null)
         if (flashTimer.current) clearTimeout(flashTimer.current)
         flashTimer.current = setTimeout(() => setFlash(null), 2000)
     }
 
-    const writeUrl = (next: { tool?: string | null; plan?: string | null; picks?: Array<string | null> }) => {
+    const writeUrl = (next: {
+        tool?: string | null
+        plan?: string | null
+        picks?: Array<string | null>
+        anchor?: string | null
+    }) => {
         const nextPlan = next.plan !== undefined ? next.plan : planSeed
         const nextPicks = next.picks ?? picks
+        const nextAnchor = nextPlan ? (next.anchor !== undefined ? next.anchor : planAnchorId) : null
         const url = writeExplorerRoute(window.location.href, {
             seed: null,
             tool: next.tool !== undefined ? next.tool : selected.tool.id,
             plan: nextPlan,
             picks: nextPlan && hasPicks(nextPicks) ? encodePlanPicks(nextPicks) : null,
+            anchor: nextAnchor,
         })
+        if (query.trim()) url.searchParams.set('q', query.slice(0, 200))
+        else url.searchParams.delete('q')
+        if (stageFilter !== null) url.searchParams.set('stage', String(stageFilter))
+        else url.searchParams.delete('stage')
         window.history.replaceState(window.history.state, '', url)
+        syncedSearch.current = window.location.search
+        currentPlanIdentity.current = planIdentity(nextPlan, nextPicks, nextAnchor)
         return url
     }
 
-    const select = (drawer: Drawer, options: { reveal?: boolean } = {}) => {
+    const select = (drawer: Drawer, options: { reveal?: boolean; focusCounter?: boolean } = {}) => {
         setSelectedId(drawer.tool.id)
         setPeek(null)
         setFlash(null)
@@ -153,6 +230,7 @@ export default function Dispensary() {
                 counterRef.current.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth', block: 'start' })
             }
         }
+        if (options.focusCounter) counterRef.current?.focus({ preventScroll: true })
     }
 
     const step = (delta: number) => {
@@ -163,9 +241,22 @@ export default function Dispensary() {
 
     const pickStage = (stage: number | null) => {
         setStageFilter(stage)
+        setShowAllHabits(false)
+        const url = new URL(window.location.href)
+        if (stage === null) url.searchParams.delete('stage')
+        else url.searchParams.set('stage', String(stage))
+        window.history.replaceState(window.history.state, '', url)
+        syncedSearch.current = window.location.search
         if (stage === null) return
         const first = drawersInStage(stage)[0]
-        if (first) select(first)
+        if (first) {
+            setSelectedId(first.tool.id)
+            setPeek(null)
+            setFlash(null)
+            url.searchParams.set('tool', first.tool.id)
+            window.history.replaceState(window.history.state, '', url)
+            syncedSearch.current = window.location.search
+        }
     }
 
     const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -179,60 +270,157 @@ export default function Dispensary() {
         else if (event.key === 'Home' && stageDrawers[0]) select(stageDrawers[0])
         else if (event.key === 'End' && stageDrawers.length > 0) select(stageDrawers[stageDrawers.length - 1])
         else handled = false
-        if (handled) event.preventDefault()
+        if (handled) {
+            event.preventDefault()
+            if (target.closest('.habit')) {
+                requestAnimationFrame(() => {
+                    document
+                        .querySelector<HTMLButtonElement>('.habit[aria-pressed="true"]')
+                        ?.focus({ preventScroll: true })
+                })
+            }
+        }
     }
 
-    const copy = async (text: string, key: string) => {
+    const updateQuery = (value: string) => {
+        const nextQuery = value.slice(0, 200)
+        setQuery(nextQuery)
+        const url = new URL(window.location.href)
+        if (nextQuery.trim()) url.searchParams.set('q', nextQuery)
+        else url.searchParams.delete('q')
+        window.history.replaceState(window.history.state, '', url)
+        syncedSearch.current = window.location.search
+    }
+
+    const clearSearch = () => {
+        updateQuery('')
+        searchRef.current?.focus()
+    }
+
+    const copy = async (text: string, key: 'plan' | 'planLink') => {
+        if (pendingCopy.current) return
+        const operation = { epoch: copyEpoch.current, timer: null as ReturnType<typeof setTimeout> | null }
+        pendingCopy.current = operation
+        setCopying(key)
+        setCopyWaiting(false)
+        setFlash(null)
+        setFailedCopy(null)
+        if (flashTimer.current) clearTimeout(flashTimer.current)
+        operation.timer = setTimeout(() => {
+            if (copyMounted.current && pendingCopy.current === operation) setCopyWaiting(true)
+        }, 8000)
         try {
             await navigator.clipboard.writeText(text)
-            say(key)
+            if (copyMounted.current && operation.epoch === copyEpoch.current) say(key)
         } catch {
-            setFailed(true)
+            if (copyMounted.current && operation.epoch === copyEpoch.current) {
+                setFlash(null)
+                setFailedCopy({ text, reason: 'failed' })
+            }
+        } finally {
+            if (operation.timer) clearTimeout(operation.timer)
+            if (pendingCopy.current === operation) pendingCopy.current = null
+            if (copyMounted.current) {
+                setCopying(null)
+                setCopyWaiting(false)
+            }
         }
     }
 
     const planTitle = (anchorName: string, key: string) => t(`plan.titles.${key}`, { name: anchorName })
 
-    const writePlan = () => {
+    const revealPlan = () => {
+        const url = new URL(window.location.href)
+        url.hash = 'prescription'
+        window.history.replaceState(window.history.state, '', url)
+        requestAnimationFrame(() => {
+            planTitleRef.current?.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth', block: 'start' })
+            planTitleRef.current?.focus({ preventScroll: true })
+        })
+    }
+
+    const writePlan = (anchorId: string | null = null) => {
+        invalidateCopyFeedback()
         const value = randomSeed()
+        setPreviousPlan(planSeed ? { seed: planSeed, picks: [...picks], anchor: planAnchorId } : null)
+        setFailedCopy(null)
+        setFlash(null)
         setPlanSeed(value)
+        setPlanAnchorId(anchorId)
         setPicks([])
-        writeUrl({ plan: value, picks: [] })
+        setPlanNotice(anchorId ? 'builtAround' : planSeed ? 'rewritten' : 'written')
+        writeUrl({ plan: value, picks: [], anchor: anchorId })
+        revealPlan()
+    }
+
+    const undoPlan = () => {
+        if (!previousPlan) return
+        invalidateCopyFeedback()
+        setPlanSeed(previousPlan.seed)
+        setPlanAnchorId(previousPlan.anchor)
+        setPicks([...previousPlan.picks])
+        setFailedCopy(null)
+        setFlash(null)
+        writeUrl({ plan: previousPlan.seed, picks: previousPlan.picks, anchor: previousPlan.anchor })
+        setPreviousPlan(null)
+        setPlanNotice('restored')
+        revealPlan()
     }
 
     const swap = (index: number) => {
         if (!plan || !planSeed) return
         const current = plan.steps[index]
         if (!current) return
-        const nextId = rerollStep(planSeed, index, current.tool.id)
+        invalidateCopyFeedback()
+        setFailedCopy(null)
+        setFlash(null)
+        const nextId = rerollStep(planSeed, index, current.tool.id, planAnchorId)
         const next = WORKFLOWS.map((_, i) => (i === index ? nextId : (picks[i] ?? null)))
         setPicks(next)
         writeUrl({ picks: next })
     }
 
     const planHref = () =>
-        writeExplorerRoute(window.location.href, {
+        writeExplorerRoute(new URL('/', window.location.origin).href, {
             seed: null,
             tool: null,
             plan: planSeed,
             picks: planSeed && hasPicks(picks) ? encodePlanPicks(picks) : null,
+            anchor: planAnchorId,
         }).href
 
-    const copyPlan = () => {
-        if (!plan) return
+    const planMarkdown = () => {
+        if (!plan) return ''
         const title = planTitle(plan.anchor.name[lang] || plan.anchor.name.en, planTitleKey(plan.anchor))
-        return copy(planToMarkdown(plan, { lang, title, shareHref: planHref() }), 'plan')
+        return planToMarkdown(plan, { lang, title, shareHref: planHref() })
     }
+
+    const copyPlan = () => {
+        if (plan) return copy(planMarkdown(), 'plan')
+    }
+
+    const context = {
+        tool: selected.tool.id,
+        plan: planSeed,
+        picks: planSeed && hasPicks(picks) ? encodePlanPicks(picks) : null,
+        query,
+        stage: stageFilter,
+        anchor: planAnchorId,
+    }
+    const habitDrawers = stageFilter === null ? DRAWERS : drawersInStage(stageFilter)
 
     const tool = selected.tool
     const name = tool.name[lang] || tool.name.en
     const domain = getDomain(tool.url)
 
     return (
-        <div onKeyDown={onKeyDown}>
+        <div>
+            <Suspense fallback={null}>
+                <ExplorerRouteObserver onChange={restoreRoute} />
+            </Suspense>
             <HabitPeek tool={peek?.tool ?? null} origin={peek ? { x: peek.x, y: peek.y } : null} />
             {/* ── First viewport: the habits, and the label that answers one ── */}
-            <section className="hero" aria-labelledby="hero-title">
+            <section className="hero" aria-labelledby="hero-title" onKeyDown={onKeyDown}>
                 <div className="wrap hero-grid">
                     <div>
                         <h1 id="hero-title" className="display hero-title" aria-label={t('hero.title')}>
@@ -252,13 +440,21 @@ export default function Dispensary() {
                         <p className="hero-lede">{t('hero.lede', { count: TOOLS.length })}</p>
 
                         <div className="stage-tabs" role="group" aria-label={t('hero.stagesLabel')}>
+                            <button
+                                type="button"
+                                className="stage-tab"
+                                aria-pressed={stageFilter === null}
+                                onClick={() => pickStage(null)}
+                            >
+                                <span className="caps">{t('hero.allStages')}</span>
+                            </button>
                             {WORKFLOWS.map((flow, index) => (
                                 <button
                                     type="button"
                                     key={flow.id}
                                     className="stage-tab"
                                     aria-pressed={stageFilter === index}
-                                    onClick={() => pickStage(stageFilter === index ? null : index)}
+                                    onClick={() => pickStage(index)}
                                 >
                                     <span className="code">{stageLetter(index)}</span>
                                     <span className="caps">{flow.name[lang]}</span>
@@ -266,15 +462,23 @@ export default function Dispensary() {
                             ))}
                         </div>
 
-                        <ul className="habit-field" aria-label={t('hero.fieldLabel')}>
-                            {DRAWERS.map((drawer) => {
+                        <ul
+                            id="habit-field"
+                            className={`habit-field${showAllHabits ? ' is-expanded' : ''}`}
+                            aria-label={t('hero.fieldLabel')}
+                        >
+                            {habitDrawers.map((drawer, index) => {
                                 const current = drawer.tool.id === tool.id
-                                const dim = stageFilter !== null && drawer.stage !== stageFilter
                                 return (
-                                    <li key={drawer.tool.id}>
+                                    <li
+                                        key={drawer.tool.id}
+                                        className={
+                                            index >= INITIAL_HABIT_COUNT && !current ? 'habit-overflow' : undefined
+                                        }
+                                    >
                                         <button
                                             type="button"
-                                            className={`habit${dim ? ' is-dim' : ''}`}
+                                            className="habit"
                                             aria-pressed={current}
                                             onClick={() => select(drawer, { reveal: true })}
                                             onPointerEnter={(event) => {
@@ -293,6 +497,19 @@ export default function Dispensary() {
                                 )
                             })}
                         </ul>
+                        {habitDrawers.length > INITIAL_HABIT_COUNT && (
+                            <button
+                                type="button"
+                                className="habit-expand btn btn--quiet"
+                                aria-expanded={showAllHabits}
+                                aria-controls="habit-field"
+                                onClick={() => setShowAllHabits(!showAllHabits)}
+                            >
+                                {showAllHabits
+                                    ? t('hero.showFewerHabits')
+                                    : t('hero.showAllHabits', { count: habitDrawers.length })}
+                            </button>
+                        )}
 
                         <p className="hero-keys code" aria-hidden="true">
                             <span>
@@ -310,12 +527,12 @@ export default function Dispensary() {
 
                     <aside
                         ref={counterRef}
+                        id="counter"
+                        tabIndex={-1}
                         className="counter"
                         onPointerMove={(event) => trackPointer(event, '.slip', 3)}
                         onPointerLeave={releasePointer}
-                        aria-label={t('counter.label')}
-                        aria-live="polite"
-                        aria-atomic="false"
+                        aria-labelledby="counter-name"
                     >
                         <div className="counter-head">
                             <span className="counter-code">{t('counter.drawer', { code: selected.code })}</span>
@@ -336,7 +553,9 @@ export default function Dispensary() {
                                 </div>
                                 <div className="slip-body">
                                     <div className="slip-title-row">
-                                        <h2 className="display slip-name">{name}</h2>
+                                        <h2 id="counter-name" className="display slip-name">
+                                            {name}
+                                        </h2>
                                         <span className="slip-domain code">{domain}</span>
                                     </div>
                                     <p className="slip-desc">{tool.description[lang]}</p>
@@ -362,7 +581,7 @@ export default function Dispensary() {
                                 <ArrowRightIcon weight="bold" />
                             </button>
                             <span className="spacer" />
-                            <Link href={`/t/${tool.id}`} className="btn btn--quiet">
+                            <Link href={toolDetailHref(tool.id, context)} className="btn btn--quiet">
                                 {t('counter.fullLabel')}
                             </Link>
                             <a href={tool.url} target="_blank" rel="noopener noreferrer" className="btn btn--brass">
@@ -371,7 +590,21 @@ export default function Dispensary() {
                                 <span className="sr-only">({t('counter.opensInNewTab')})</span>
                             </a>
                         </div>
+                        <div className="counter-tools">
+                            <button type="button" className="btn btn--quiet" onClick={() => writePlan(tool.id)}>
+                                {t('plan.buildAround', { name })}
+                            </button>
+                        </div>
                     </aside>
+                    <p id="counter-status" className="sr-only" role="status" aria-atomic="true">
+                        {t('counter.selectionStatus', {
+                            name,
+                            stage: WORKFLOWS[selected.stage]?.name[lang],
+                            code: selected.code,
+                            at: at + 1,
+                            total: stageDrawers.length,
+                        })}
+                    </p>
                 </div>
             </section>
 
@@ -380,7 +613,7 @@ export default function Dispensary() {
                 <div className="wrap">
                     <div className="cabinet-head">
                         <div>
-                            <h2 id="cabinet-title" className="display cabinet-title" data-reveal>
+                            <h2 id="cabinet-title" tabIndex={-1} className="display cabinet-title" data-reveal>
                                 {t('cabinet.title')}
                             </h2>
                             <p className="cabinet-lede">{t('cabinet.lede', { count: TOOLS.length })}</p>
@@ -393,19 +626,21 @@ export default function Dispensary() {
                                 <MagnifyingGlassIcon weight="bold" />
                                 <input
                                     id="drawer-search"
+                                    ref={searchRef}
                                     type="search"
+                                    maxLength={200}
                                     value={query}
                                     placeholder={t('cabinet.searchPlaceholder')}
-                                    onChange={(event) => setQuery(event.target.value)}
+                                    onChange={(event) => updateQuery(event.target.value)}
                                     onKeyDown={(event) => {
-                                        if (event.key === 'Escape') setQuery('')
+                                        if (event.key === 'Escape' && !event.nativeEvent.isComposing) clearSearch()
                                     }}
                                 />
                                 {query && (
                                     <button
                                         type="button"
                                         className="chrome-btn"
-                                        onClick={() => setQuery('')}
+                                        onClick={clearSearch}
                                         aria-label={t('cabinet.clearSearch')}
                                     >
                                         <XIcon weight="bold" />
@@ -423,13 +658,16 @@ export default function Dispensary() {
                     </div>
 
                     <div
-                        className="cabinet-frame"
+                        className={`cabinet-frame${matches !== null ? ' is-searching' : ''}`}
                         data-reveal
                         onPointerMove={(event) => trackPointer(event, '.drawer', 9)}
                         onPointerLeave={releasePointer}
                     >
                         {WORKFLOWS.map((flow, stage) => {
-                            const column = drawersInStage(stage)
+                            const column = drawersInStage(stage).filter(
+                                (drawer) => matches === null || matches.has(drawer.tool.id),
+                            )
+                            if (matches !== null && column.length === 0) return null
                             return (
                                 <section key={flow.id} className="cabinet-col" aria-labelledby={`col-${flow.id}`}>
                                     <header className="col-head">
@@ -442,29 +680,38 @@ export default function Dispensary() {
                                         <p className="col-question">{flow.question[lang]}</p>
                                     </header>
                                     <ul className="drawers">
-                                        {Array.from({ length: CABINET_ROWS }, (_, row) => {
-                                            const drawer = column[row]
-                                            return (
-                                                <li key={drawer?.tool.id ?? `empty-${row}`}>
-                                                    {drawer ? (
-                                                        <DrawerFront
-                                                            drawer={drawer}
-                                                            lang={lang}
-                                                            current={drawer.tool.id === tool.id}
-                                                            dim={matches !== null && !matches.has(drawer.tool.id)}
-                                                            onSelect={(d) => select(d, { reveal: true })}
-                                                        />
-                                                    ) : (
-                                                        <EmptyDrawer label={t('cabinet.empty')} />
-                                                    )}
-                                                </li>
-                                            )
-                                        })}
+                                        {Array.from(
+                                            { length: matches === null ? CABINET_ROWS : column.length },
+                                            (_, row) => {
+                                                const drawer = column[row]
+                                                return (
+                                                    <li key={drawer?.tool.id ?? `empty-${row}`}>
+                                                        {drawer ? (
+                                                            <DrawerFront
+                                                                drawer={drawer}
+                                                                lang={lang}
+                                                                current={drawer.tool.id === tool.id}
+                                                                onSelect={(d) =>
+                                                                    select(d, { reveal: true, focusCounter: true })
+                                                                }
+                                                            />
+                                                        ) : (
+                                                            <EmptyDrawer label={t('cabinet.empty')} />
+                                                        )}
+                                                    </li>
+                                                )
+                                            },
+                                        )}
                                     </ul>
                                 </section>
                             )
                         })}
                     </div>
+                    {matches?.size === 0 && (
+                        <button type="button" className="btn btn--brass" onClick={clearSearch}>
+                            {t('cabinet.resetSearch')}
+                        </button>
+                    )}
                 </div>
             </section>
 
@@ -472,19 +719,36 @@ export default function Dispensary() {
             <section id="prescription" ref={rxRef} className="rx" aria-labelledby="rx-title">
                 <div className="wrap rx-grid">
                     <div className="rx-intro">
-                        <h2 id="rx-title" className="display rx-title">
+                        <h2 id="rx-title" tabIndex={-1} className="display rx-title">
                             {t('plan.title')}
                         </h2>
                         <p className="rx-lede">{t('plan.lede')}</p>
                         <div className="rx-intro-actions">
-                            <button type="button" className="btn btn--ink" onClick={writePlan}>
+                            <button type="button" className="btn btn--ink" onClick={() => writePlan()}>
                                 {plan ? <ArrowsClockwiseIcon weight="bold" /> : null}
                                 {plan ? t('plan.rewrite') : t('plan.write')}
                             </button>
                         </div>
+                        {previousPlan && (
+                            <div className="rx-undo">
+                                <button type="button" className="btn btn--line" onClick={undoPlan}>
+                                    <ArrowLeftIcon weight="bold" />
+                                    {t('plan.undo')}
+                                </button>
+                                <p>{t('plan.undoHint')}</p>
+                            </div>
+                        )}
+                        <p className="sr-only" role="status" aria-atomic="true">
+                            {planNotice
+                                ? t(`plan.${planNotice}`, { name: plan?.anchor.name[lang] || plan?.anchor.name.en })
+                                : ''}
+                        </p>
                     </div>
 
                     <section className="rx-slip" data-reveal aria-label={t('plan.label')}>
+                        <p className="sr-only" role="status" aria-atomic="true">
+                            {flash === 'plan' ? t('plan.copied') : flash === 'planLink' ? t('plan.linkCopied') : ''}
+                        </p>
                         <div className="rx-head">
                             <span className="rx-mark" aria-hidden="true">
                                 Rx
@@ -497,16 +761,22 @@ export default function Dispensary() {
 
                         {plan ? (
                             <>
-                                <h3 className="display rx-plan-title">
+                                <h3 ref={planTitleRef} tabIndex={-1} className="display rx-plan-title">
                                     {planTitle(
                                         plan.anchor.name[lang] || plan.anchor.name.en,
                                         planTitleKey(plan.anchor),
                                     )}
                                 </h3>
+                                <p className="rx-basis">
+                                    {t('plan.basis', { name: plan.anchor.name[lang] || plan.anchor.name.en })}
+                                </p>
                                 <ol className="rx-lines">
                                     {plan.steps.map((line, index) => {
                                         const flow = WORKFLOWS[index]
                                         const toolName = line.tool.name[lang] || line.tool.name.en
+                                        const sharedTags = line.tool.tags.filter((tag) =>
+                                            plan.anchor.tags.includes(tag),
+                                        )
                                         return (
                                             <li
                                                 key={line.workflowId}
@@ -528,12 +798,24 @@ export default function Dispensary() {
                                                             : ''}
                                                         {line.pinned ? ` · ${t('plan.pinned')}` : ''}
                                                     </span>
-                                                    <Link href={`/t/${line.tool.id}`} className="rx-name">
+                                                    <Link
+                                                        href={toolDetailHref(line.tool.id, context, 'prescription')}
+                                                        className="rx-name"
+                                                    >
                                                         {toolName}
                                                     </Link>
                                                     <span className="rx-instead">
                                                         {t('plan.instead')}{' '}
                                                         <s className="strike">{habitOf(line.tool, lang)}</s>
+                                                    </span>
+                                                    <span className="rx-relation">
+                                                        {line.tool.id === plan.anchor.id
+                                                            ? t('plan.anchorBasis')
+                                                            : sharedTags.length > 0
+                                                              ? t('plan.sharedTags', {
+                                                                    tags: sharedTags.map(formatTag).join(' · '),
+                                                                })
+                                                              : t('plan.noSharedTags')}
                                                     </span>
                                                 </div>
                                                 <div className="rx-line-actions">
@@ -552,18 +834,34 @@ export default function Dispensary() {
                                     })}
                                 </ol>
                                 <div className="rx-foot">
-                                    <button type="button" className="btn btn--ink" onClick={copyPlan}>
-                                        {flash === 'plan' ? t('plan.copied') : t('plan.copy')}
+                                    <button
+                                        type="button"
+                                        className="btn btn--ink"
+                                        onClick={copyPlan}
+                                        disabled={copying !== null}
+                                        aria-busy={copying === 'plan'}
+                                    >
+                                        {copying === 'plan'
+                                            ? t('plan.copying')
+                                            : flash === 'plan'
+                                              ? t('plan.copied')
+                                              : t('plan.copy')}
                                     </button>
                                     <button
                                         type="button"
                                         className="btn btn--line"
                                         onClick={() => copy(planHref(), 'planLink')}
+                                        disabled={copying !== null}
+                                        aria-busy={copying === 'planLink'}
                                     >
                                         <LinkIcon weight="bold" />
-                                        {flash === 'planLink' ? t('plan.linkCopied') : t('plan.copyLink')}
+                                        {copying === 'planLink'
+                                            ? t('plan.copying')
+                                            : flash === 'planLink'
+                                              ? t('plan.linkCopied')
+                                              : t('plan.copyLink')}
                                     </button>
-                                    {failed && (
+                                    {failedCopy?.reason === 'failed' && (
                                         <p role="status" className="notice">
                                             {t('plan.copyFailed')}
                                         </p>
@@ -573,6 +871,30 @@ export default function Dispensary() {
                                         <span>路</span>
                                     </span>
                                 </div>
+                                <p className="copy-status" role="status" aria-atomic="true">
+                                    {copyWaiting ? t('plan.clipboardPending') : ''}
+                                </p>
+                                {copyWaiting && (
+                                    <button
+                                        type="button"
+                                        className="btn btn--line"
+                                        onClick={() =>
+                                            setFailedCopy({
+                                                text: copying === 'planLink' ? planHref() : planMarkdown(),
+                                                reason: 'manual',
+                                            })
+                                        }
+                                    >
+                                        {t('plan.copyFallbackTitle')}
+                                    </button>
+                                )}
+                                {failedCopy !== null && (
+                                    <CopyFeedback
+                                        text={failedCopy.text}
+                                        label={t('plan.copyFallbackTitle')}
+                                        hint={t('plan.copyFallbackHint')}
+                                    />
+                                )}
                             </>
                         ) : (
                             <>

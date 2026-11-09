@@ -19,11 +19,14 @@ export default function NotFound() {
                         {t('notFound.cta')}
                     </Link>
                 </p>
-                <nav aria-label={t('notFound.resources')} className="insert-links code">
-                    <a href="/sitemap.xml">sitemap.xml</a>
-                    <a href="/llms.txt">llms.txt</a>
-                    <a href="/tools.json">tools.json</a>
-                </nav>
+                <details className="not-found-resources">
+                    <summary>{t('notFound.resources')}</summary>
+                    <nav aria-label={t('notFound.resources')} className="insert-links code">
+                        <a href="/sitemap.xml">sitemap.xml</a>
+                        <a href="/llms.txt">llms.txt</a>
+                        <a href="/tools.json">tools.json</a>
+                    </nav>
+                </details>
             </div>
         </section>
     )

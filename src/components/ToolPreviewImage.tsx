@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import type { Tool } from '@/data/tools'
+import { useI18nReady } from '@/hooks/useI18nReady'
 import { getIcon } from '@/lib/icon-map'
 
 interface ToolPreviewImageProps {
@@ -33,15 +34,28 @@ export function ToolPreviewImage({
     iconClassName = 'h-12 w-12',
 }: ToolPreviewImageProps) {
     const [failedId, setFailedId] = useState<string | null>(null)
+    const { t } = useI18nReady()
 
     if (failedId === tool.id) {
         const Icon = getIcon(tool.icon)
+        const icon = (
+            <Icon className={iconClassName} style={{ color: tool.color }} weight="duotone" aria-hidden="true" />
+        )
+        if (!alt) {
+            return (
+                <div className={`preview-fallback is-decorative ${className ?? ''}`} aria-hidden="true">
+                    {icon}
+                </div>
+            )
+        }
         return (
             <div
-                className={`flex h-full w-full items-center justify-center ${className ?? ''}`}
-                style={{ backgroundColor: `${tool.color}18` }}
+                className={`preview-fallback ${className ?? ''}`}
+                role="img"
+                aria-label={`${alt}. ${t('media.previewUnavailable')}`}
             >
-                <Icon className={iconClassName} style={{ color: tool.color }} weight="duotone" />
+                {icon}
+                <span>{t('media.previewUnavailable')}</span>
             </div>
         )
     }

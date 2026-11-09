@@ -1,0 +1,78 @@
+import { expect, test } from '@playwright/test'
+
+test('search removes unrelated drawers and empty results recover focus', async ({ page }) => {
+    await page.goto('/')
+    const search = page.getByLabel('Find a drawer')
+    await search.fill('Mobbin')
+    await expect(page.locator('.cabinet-frame .drawer')).toHaveCount(1)
+    await expect(page.locator('.cabinet-frame .drawer')).toHaveAccessibleName(/Mobbin/)
+    await expect(page.locator('.cabinet-col')).toHaveCount(1)
+    await search.fill('no-such-tool-000')
+    await expect(page.locator('.cabinet-frame .drawer')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Show all drawers', exact: true }).click()
+    await expect(search).toHaveValue('')
+    await expect(search).toBeFocused()
+    await expect(page.locator('.cabinet-frame button.drawer')).toHaveCount(29)
+})
+
+test('stage selection narrows the habit list and All restores it', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'C Make it move', exact: true }).click()
+    const count = await page.locator('.habit').count()
+    expect(count).toBeGreaterThan(0)
+    expect(count).toBeLessThan(29)
+    await expect(page.locator('.habit.is-dim')).toHaveCount(0)
+    await page.getByRole('button', { name: 'All stages', exact: true }).click()
+    await expect(page.locator('.habit')).toHaveCount(29)
+})
+
+test('a mobile visitor can reveal the full habit list on demand', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Mobile progressive disclosure')
+    await page.goto('/')
+    const visible = page.locator('.habit:visible')
+    expect(await visible.count()).toBeLessThanOrEqual(4)
+    await page.getByRole('button', { name: 'Show all 29 habits' }).click()
+    await expect(visible).toHaveCount(29)
+    await page.getByRole('button', { name: 'Show fewer habits' }).click()
+    expect(await visible.count()).toBeLessThanOrEqual(4)
+})
+
+test('prescription detail visits preserve swapped lines and return to the prescription', async ({ page }) => {
+    await page.goto('/?plan=k4x9f2#prescription')
+    await page.getByRole('button', { name: /Swap the Make it move line/ }).click()
+    const before = await page.locator('.rx-name').allTextContents()
+    const picks = new URL(page.url()).searchParams.get('p')
+    await page.locator('.rx-name').nth(2).click()
+    await expect(page.locator('.big-label')).toBeVisible()
+    await page.getByRole('link', { name: 'Back to the cabinet', exact: true }).click()
+    await expect(page.locator('.rx-name')).toHaveCount(5)
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(before)
+    expect(new URL(page.url()).searchParams.get('p')).toBe(picks)
+    expect(new URL(page.url()).hash).toBe('#prescription')
+})
+
+test('arrow keys on cabinet and prescription controls do not change the selected tool', async ({ page }) => {
+    await page.goto('/?plan=k4x9f2#prescription')
+    const before = await page.locator('.slip-name').textContent()
+    await page.locator('.rx-line button').first().focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('.slip-name')).toHaveText(before ?? '')
+    await page.locator('.cabinet-frame button.drawer').first().focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('.slip-name')).toHaveText(before ?? '')
+})
+
+test('blocked prescription copying offers the exact selected payload', async ({ page }) => {
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new Error('Permission denied')) } })
+    })
+    await page.goto('/?plan=k4x9f2#prescription')
+    await page.getByRole('button', { name: 'Copy as Markdown', exact: true }).click()
+    const fallback = page.locator('.rx-slip .manual-copy textarea')
+    await expect(fallback).toBeVisible()
+    await expect(fallback).toBeFocused()
+    expect(await fallback.inputValue()).toContain('## 1.')
+    await page.getByRole('button', { name: 'Copy link', exact: true }).click()
+    expect(await fallback.inputValue()).toContain('?plan=k4x9f2')
+    expect(await fallback.inputValue()).not.toContain('## 1.')
+})

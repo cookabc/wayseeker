@@ -83,7 +83,12 @@ const ThemeSwitch = React.forwardRef<HTMLButtonElement, ThemeSwitchProps>(({ cla
         dark: isReady ? t('theme.dark') : 'Dark',
     }
 
-    const current = mounted ? theme : 'system'
+    const validTheme = Object.hasOwn(themeIcons, theme) ? theme : 'system'
+    React.useEffect(() => {
+        if (theme !== validTheme) setTheme(validTheme)
+    }, [theme, validTheme, setTheme])
+
+    const current = mounted ? validTheme : 'system'
     const next = cycle[current]
     const Icon = themeIcons[current]
     const label = isReady

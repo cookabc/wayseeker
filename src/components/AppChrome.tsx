@@ -10,10 +10,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
     return (
         <>
-            <Header />
             <a href="#main-content" className="skip-link">
                 {skip}
             </a>
+            <Header />
             <main id="main-content" className="flex-grow" tabIndex={-1}>
                 {children}
             </main>

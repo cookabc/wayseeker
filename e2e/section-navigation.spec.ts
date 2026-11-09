@@ -1,0 +1,82 @@
+import { expect, test } from '@playwright/test'
+
+test('section navigation and reload preserve the complete exploration context', async ({ page }) => {
+    await page.goto('/?tool=timing&plan=k4x9f2&anchor=timing&p=..paper-shaders&stage=2#prescription')
+    await expect(page.locator('.rx-name')).toHaveCount(5)
+    const names = await page.locator('.rx-name').allTextContents()
+    await page.getByLabel('Find a drawer').fill('motion')
+    const before = new URL(page.url()).search
+    await page.getByRole('link', { name: 'Find a tool', exact: true }).click()
+    expect(new URL(page.url()).search).toBe(before)
+    expect(new URL(page.url()).hash).toBe('#cabinet')
+    await expect(page.locator('#cabinet-title')).toBeFocused()
+    await page.reload()
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(names)
+    await expect(page.locator('.slip-name')).toHaveText('Timing')
+    await expect(page.getByLabel('Find a drawer')).toHaveValue('motion')
+    await expect(page.getByRole('button', { name: 'C Make it move', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    expect(new URL(page.url()).search).toBe(before)
+    await page.getByRole('link', { name: 'Make a plan', exact: true }).click()
+    await expect(page.locator('#rx-title')).toBeFocused()
+    expect(new URL(page.url()).search).toBe(before)
+})
+
+test('header links resolve against newly created plan state and keep native new-tab destinations', async ({ page, context }) => {
+    await page.goto('/?tool=timing#counter')
+    await page.getByRole('button', { name: 'Build around Timing', exact: true }).click()
+    const names = await page.locator('.rx-name').allTextContents()
+    const query = new URL(page.url()).search
+    const link = page.getByRole('link', { name: 'Find a tool', exact: true })
+    await expect(link).toHaveAttribute('href', '#cabinet')
+    // Native href resolution is also what modifier clicks and the context menu open.
+    const nativeDestination = await link.evaluate((element: HTMLAnchorElement) => element.href)
+    expect(new URL(nativeDestination).search).toBe(query)
+    const secondTab = await context.newPage()
+    await secondTab.goto(nativeDestination)
+    await expect.poll(() => secondTab.locator('.rx-name').allTextContents()).toEqual(names)
+    await secondTab.close()
+    await link.click()
+    expect(new URL(page.url()).search).toBe(query)
+    await page.reload()
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(names)
+})
+
+test('detail-page section navigation retains its safe return context', async ({ page }) => {
+    await page.goto('/?tool=timing&plan=k4x9f2&anchor=timing&p=..paper-shaders&q=motion&stage=2#prescription')
+    await expect(page.locator('.rx-name')).toHaveCount(5)
+    const names = await page.locator('.rx-name').allTextContents()
+    const expected = new URL(page.url()).searchParams
+    await page.locator('.rx-name').nth(2).click()
+    const link = page.getByRole('link', { name: 'Find a tool', exact: true })
+    await expect.poll(async () => new URL(await link.getAttribute('href') ?? '/', page.url()).searchParams.get('plan')).toBe('k4x9f2')
+    await link.click()
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(names)
+    const actual = new URL(page.url())
+    expect(actual.pathname).toBe('/')
+    expect(actual.hash).toBe('#cabinet')
+    for (const key of ['tool', 'plan', 'anchor', 'p', 'q', 'stage']) {
+        expect(actual.searchParams.get(key)).toBe(expected.get(key))
+    }
+    await page.reload()
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(names)
+})
+
+test('one-level undo survives section navigation and same-plan hash history', async ({ page }) => {
+    await page.goto('/?plan=k4x9f2&anchor=timing&p=..paper-shaders#prescription')
+    await expect(page.locator('.rx-name')).toHaveCount(5)
+    const original = await page.locator('.rx-name').allTextContents()
+    await page.getByRole('button', { name: 'Write a new one', exact: true }).click()
+    const rewritten = await page.locator('.rx-name').allTextContents()
+    const seed = new URL(page.url()).searchParams.get('plan')
+    await page.getByRole('link', { name: 'Find a tool', exact: true }).click()
+    await page.getByRole('link', { name: 'Make a plan', exact: true }).click()
+    await page.goBack()
+    expect(new URL(page.url()).hash).toBe('#cabinet')
+    expect(new URL(page.url()).searchParams.get('plan')).toBe(seed)
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(rewritten)
+    await expect(page.getByRole('button', { name: 'Restore previous prescription', exact: true })).toHaveCount(1)
+    await page.getByRole('button', { name: 'Restore previous prescription', exact: true }).click()
+    await expect.poll(() => page.locator('.rx-name').allTextContents()).toEqual(original)
+    expect(new URL(page.url()).searchParams.get('plan')).toBe('k4x9f2')
+    expect(new URL(page.url()).searchParams.get('anchor')).toBe('timing')
+})

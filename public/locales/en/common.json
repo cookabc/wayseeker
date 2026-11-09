@@ -9,8 +9,9 @@
     "terms": "Terms",
     "home": "Home",
     "primary": "Sections",
-    "cabinet": "Cabinet",
-    "prescription": "Prescription"
+    "cabinet": "Find a tool",
+    "prescription": "Make a plan",
+    "site": "Site"
   },
   "hero": {
     "title": "What are you settling for?",
@@ -18,7 +19,10 @@
     "stagesLabel": "Show habits by stage",
     "fieldLabel": "Habits, by drawer",
     "keys": "next drawer",
-    "keysColumn": "next column"
+    "keysColumn": "next column",
+    "allStages": "All stages",
+    "showAllHabits": "Show all {{count}} habits",
+    "showFewerHabits": "Show fewer habits"
   },
   "counter": {
     "label": "Dispensed label",
@@ -32,7 +36,8 @@
     "previewAlt": "{{name}}, homepage screenshot",
     "for": "For",
     "replaces": "Replaces",
-    "caution": "Caution"
+    "caution": "Caution",
+    "selectionStatus": "{{name}}, {{stage}}, drawer {{code}}. {{at}} of {{total}}."
   },
   "cabinet": {
     "title": "The cabinet",
@@ -43,7 +48,8 @@
     "matches_one": "{{count}} drawer matches",
     "matches_other": "{{count}} drawers match",
     "noMatches": "No drawer matches. Try a habit, like “prompt” or “motion”.",
-    "empty": "Empty drawer"
+    "empty": "Empty drawer",
+    "resetSearch": "Show all drawers"
   },
   "plan": {
     "title": "Write a prescription",
@@ -54,10 +60,12 @@
     "swapLabel": "Swap the {{stage}} line",
     "detail": "Label",
     "copy": "Copy as Markdown",
+    "copying": "Copying…",
+    "clipboardPending": "The clipboard request is still waiting for the browser. Check for a permission prompt, or copy the text manually.",
     "copied": "Prescription copied",
     "copyLink": "Copy link",
     "linkCopied": "Link copied",
-    "copyFailed": "The clipboard is unavailable. The prescription link is in your address bar.",
+    "copyFailed": "The clipboard is unavailable. Select and copy the text below, or try again.",
     "anchor": "Anchor",
     "number": "No.",
     "instead": "instead of",
@@ -70,7 +78,20 @@
       "ai": "Taste for your agent, starting from {{name}}",
       "ui": "An interface plan starting from {{name}}",
       "motion": "A motion plan starting from {{name}}"
-    }
+    },
+    "copyFallbackTitle": "Copy manually",
+    "copyFallbackHint": "Select the text below and copy it, or try again.",
+    "buildAround": "Build around {{name}}",
+    "undo": "Restore previous prescription",
+    "undoHint": "Available until you leave or reload this page.",
+    "rewritten": "New prescription written. Your previous prescription can be restored.",
+    "restored": "Previous prescription restored.",
+    "builtAround": "Prescription built around {{name}}.",
+    "written": "Prescription written.",
+    "basis": "Starts with {{name}}. Suggestions favor related directions; check each label for fit.",
+    "sharedTags": "Related: {{tags}}",
+    "noSharedTags": "Independent pick for this stage.",
+    "anchorBasis": "Starting tool"
   },
   "detail": {
     "back": "Back to the cabinet",
@@ -82,7 +103,17 @@
     "imageDone": "Image ready",
     "github": "Source on GitHub",
     "whyIUseIt": "Why I use it",
-    "curatorAttribution": "Curator's note, {{domain}}"
+    "curatorAttribution": "Curator's note, {{domain}}",
+    "copyingNote": "Copying…",
+    "clipboardPending": "The browser has not finished copying. If a clipboard permission prompt is open, respond to it to continue.",
+    "copyManually": "Copy text manually",
+    "renderingImage": "Preparing image…",
+    "imageCopied": "Image copied",
+    "imageDownloaded": "Image downloaded",
+    "copyFailed": "The clipboard is unavailable. Copy the label text below, or try again.",
+    "imageFailed": "The image could not be prepared. Try again, or copy the label text.",
+    "manualLabel": "Label text",
+    "manualHint": "Select and copy this text using your browser or keyboard."
   },
   "footer": {
     "meta": "{{count}} tools, filed by hand, in English and Chinese."
@@ -103,5 +134,8 @@
     "body": "The page you are looking for does not exist or has been moved.",
     "cta": "Back to the cabinet",
     "resources": "Site resources"
+  },
+  "media": {
+    "previewUnavailable": "Preview unavailable"
   }
 }

@@ -74,6 +74,31 @@ function hasCjk(text: string): boolean {
 
 const SANS = '"Archivo", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif'
 const MONO = '"Fragment Mono", ui-monospace, Menlo, monospace'
+const LOCAL_SANS = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
+const LOCAL_MONO = 'ui-monospace, Menlo, monospace'
+
+/** Font requests may remain pending on a weak connection. Always release the timer/listener. */
+async function waitForFonts(fonts: Promise<unknown>, signal?: AbortSignal): Promise<boolean> {
+    signal?.throwIfAborted()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let onAbort: (() => void) | undefined
+    try {
+        return await Promise.race([
+            fonts.then(
+                () => true,
+                () => false,
+            ),
+            new Promise<boolean>((resolve, reject) => {
+                timer = setTimeout(() => resolve(false), 2000)
+                onAbort = () => reject(signal?.reason ?? new DOMException('Aborted', 'AbortError'))
+                signal?.addEventListener('abort', onAbort, { once: true })
+            }),
+        ])
+    } finally {
+        clearTimeout(timer)
+        if (onAbort) signal?.removeEventListener('abort', onAbort)
+    }
+}
 
 // Light dispensary palette, baked in so pasted cards read the same everywhere.
 const LACQUER = '#1B3A31'
@@ -84,23 +109,56 @@ const RULE = 'rgba(22, 32, 27, 0.18)'
 const BRASS = '#C9A35A'
 const SEAL = '#B8321D'
 
-export async function renderNoteCard(data: NoteCardData): Promise<HTMLCanvasElement> {
+export async function renderNoteCard(data: NoteCardData, signal?: AbortSignal): Promise<HTMLCanvasElement> {
+    signal?.throwIfAborted()
     const scale = 2
     const width = 1200
     const margin = 64
     const pad = 72
     const contentWidth = width - margin * 2 - pad * 2
 
+    const cjk = hasCjk(`${data.name} ${data.note}`)
+    // next/font may assign generated family names. Use the same loaded families
+    // as the page, while retaining local fallbacks for CJK and unsupported APIs.
+    const styles = typeof getComputedStyle === 'function' ? getComputedStyle(document.body) : null
+    const sans = `${styles?.getPropertyValue('--font-archivo').trim() || 'Archivo'}, ${SANS}`
+    const mono = styles?.getPropertyValue('--font-fragment').trim() || MONO
+    let nameFont = `800 ${cjk ? 60 : 72}px ${sans}`
+    let noteFont = `400 ${cjk ? 32 : 31}px ${sans}`
+    let labelFont = `400 18px ${mono}`
+    const nameText = cjk ? data.name : data.name.toUpperCase()
+    const labelText = `${data.code ?? ''} ${data.label} ${data.attributionLabel} ${data.domain} ${data.brand}`
+
+    // Canvas measurements do not automatically load web fonts. Request the
+    // actual glyphs before measuring, so line breaks and export height agree.
+    if (document.fonts?.load) {
+        try {
+            const loaded = await waitForFonts(
+                Promise.all([
+                    document.fonts.load(nameFont, nameText),
+                    document.fonts.load(noteFont, data.note),
+                    document.fonts.load(labelFont, labelText.toUpperCase()),
+                ]),
+                signal,
+            )
+            if (!loaded) {
+                nameFont = `800 ${cjk ? 60 : 72}px ${LOCAL_SANS}`
+                noteFont = `400 ${cjk ? 32 : 31}px ${LOCAL_SANS}`
+                labelFont = `400 18px ${LOCAL_MONO}`
+            }
+        } catch {
+            signal?.throwIfAborted()
+            nameFont = `800 ${cjk ? 60 : 72}px ${LOCAL_SANS}`
+            noteFont = `400 ${cjk ? 32 : 31}px ${LOCAL_SANS}`
+            labelFont = `400 18px ${LOCAL_MONO}`
+        }
+    }
+    signal?.throwIfAborted()
+
     const scratch = document.createElement('canvas').getContext('2d')
     if (!scratch) throw new Error('Canvas 2D context unavailable')
 
-    const cjk = hasCjk(`${data.name} ${data.note}`)
-    const nameFont = `800 ${cjk ? 60 : 72}px ${SANS}`
-    const noteFont = `400 ${cjk ? 32 : 31}px ${SANS}`
-    const labelFont = `500 18px ${MONO}`
-
     scratch.font = nameFont
-    const nameText = cjk ? data.name : data.name.toUpperCase()
     const nameLines = wrapText(nameText, contentWidth, (s) => scratch.measureText(s).width)
     scratch.font = noteFont
     const noteLines = wrapText(data.note, contentWidth, (s) => scratch.measureText(s).width)
@@ -179,23 +237,36 @@ export type CopyImageResult = 'copied' | 'downloaded'
  * download when the async clipboard image API is unavailable (e.g. Firefox
  * or non-secure contexts).
  */
-export async function copyCanvasAsImage(canvas: HTMLCanvasElement, filename: string): Promise<CopyImageResult> {
+export async function copyCanvasAsImage(
+    canvas: HTMLCanvasElement,
+    filename: string,
+    options: { signal?: AbortSignal; onClipboardStart?: () => void } = {},
+): Promise<CopyImageResult> {
+    const { signal, onClipboardStart } = options
+    signal?.throwIfAborted()
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+    signal?.throwIfAborted()
     if (!blob) throw new Error('PNG encoding failed')
 
     if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
         try {
+            onClipboardStart?.()
+            signal?.throwIfAborted()
             await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+            signal?.throwIfAborted()
             return 'copied'
         } catch {
+            signal?.throwIfAborted()
             // Permission denied or transient failure — fall through to download.
         }
     }
 
+    signal?.throwIfAborted()
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = filename
+    signal?.throwIfAborted()
     anchor.click()
     setTimeout(() => URL.revokeObjectURL(url), 10_000)
     return 'downloaded'
