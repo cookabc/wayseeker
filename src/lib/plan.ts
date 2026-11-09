@@ -1,6 +1,8 @@
 import TOOLS, { type Tool } from '../data/tools.ts'
 import { WORKFLOWS, type WorkflowId } from '../data/workflow.ts'
 import type { Language } from './curator-note.ts'
+import { toolDetailHref } from './exploration-context.ts'
+import { readExplorerRoute } from './explorer-route.ts'
 import { seededShuffle, seedToNumber } from './shuffle.ts'
 import { SITE_URL } from './site.ts'
 
@@ -13,10 +15,9 @@ import { SITE_URL } from './site.ts'
  * first, and every stage then prefers candidates that share tags with it, so
  * a plan keeps a direction instead of reading like five strangers.
  *
- * Identity is fully deterministic: (seed, picks) reproduces the plan byte for
- * byte, which is what makes it shareable. The anchor always comes from the
- * seed alone — rerolling one step never re-anchors the others, so swapping a
- * tool out cannot quietly bend the rest of the plan.
+ * Identity is deterministic: (seed, picks, optional anchor) reproduces a plan.
+ * Without an explicit anchor, existing seed links keep their original picks.
+ * Swapping a step never changes the anchor or the other four steps.
  */
 
 export interface PlanStep {
@@ -37,8 +38,10 @@ export type PlanPicks = ReadonlyArray<string | null>
 
 const STAGE_SALT = 0x9e3779b1
 
-/** The tool the plan is named and themed after. Seed-only, never from picks. */
-export function planAnchor(seed: string): Tool {
+/** An explicit known tool can set the direction; otherwise keep legacy seed selection. */
+export function planAnchor(seed: string, anchorId?: string | null): Tool {
+    const explicit = anchorId ? TOOLS.find((tool) => tool.id === anchorId) : undefined
+    if (explicit) return explicit
     const anchor = seededShuffle(TOOLS, seedToNumber(seed))[0]
     if (!anchor) throw new Error('planAnchor: the catalogue is empty')
     return anchor
@@ -66,12 +69,15 @@ export function stageCandidates(workflowIndex: number, anchor: Tool, seed: strin
 }
 
 /** Build the plan for a seed. Picks are trusted only when they name a tool on that route. */
-export function generatePlan(seed: string, picks: PlanPicks = []): Plan {
-    const anchor = planAnchor(seed)
+export function generatePlan(seed: string, picks: PlanPicks = [], anchorId?: string | null): Plan {
+    const anchor = planAnchor(seed, anchorId)
     const steps = WORKFLOWS.map((flow, index) => {
         const wanted = picks[index] ?? null
         const pinned = Boolean(wanted && flow.toolIds.includes(wanted))
-        const defaultPick = stageCandidates(index, anchor, seed)[0]
+        const defaultPick =
+            anchorId === anchor.id && flow.toolIds.includes(anchor.id)
+                ? anchor
+                : stageCandidates(index, anchor, seed)[0]
         const tool = (pinned && wanted ? TOOLS.find((entry) => entry.id === wanted) : undefined) ?? defaultPick
         if (!tool) throw new Error(`generatePlan: route "${flow.id}" has no tools`)
         return { workflowId: flow.id, tool, pinned }
@@ -84,8 +90,8 @@ export function generatePlan(seed: string, picks: PlanPicks = []): Plan {
  * stage's sequence. Cycling through the whole route returns to the start, so
  * repeated swaps never dead-end and every outcome is reproducible from the seed.
  */
-export function rerollStep(seed: string, workflowIndex: number, currentId: string): string {
-    const candidates = stageCandidates(workflowIndex, planAnchor(seed), seed)
+export function rerollStep(seed: string, workflowIndex: number, currentId: string, anchorId?: string | null): string {
+    const candidates = stageCandidates(workflowIndex, planAnchor(seed, anchorId), seed)
     const at = candidates.findIndex((tool) => tool.id === currentId)
     const next = candidates[(at + 1 + candidates.length) % candidates.length] ?? candidates[0]
     if (!next) throw new Error(`rerollStep: route at ${workflowIndex} has no tools`)
@@ -135,13 +141,32 @@ export function hasPicks(picks: PlanPicks): boolean {
 export function planToMarkdown(plan: Plan, options: { lang: Language; title: string; shareHref: string }): string {
     const lang = options.lang
     const lines: string[] = [`# ${options.title}`, '']
+    const shared = readExplorerRoute(
+        new URL(options.shareHref, SITE_URL).search,
+        TOOLS.map((tool) => tool.id),
+    )
+    const picks = planPicks(plan)
     plan.steps.forEach((step, index) => {
         const flow = WORKFLOWS.find((entry) => entry.id === step.workflowId)
         const name = step.tool.name[lang] || step.tool.name.en
         lines.push(`## ${index + 1}. ${flow?.name[lang] ?? step.workflowId} — ${name}`, '')
         lines.push(step.tool.description[lang], '')
         if (step.tool.note) lines.push(step.tool.note[lang], '')
-        lines.push(`${SITE_URL}/t/${step.tool.id}`, '')
+        lines.push(
+            `${SITE_URL}${toolDetailHref(
+                step.tool.id,
+                {
+                    tool: step.tool.id,
+                    plan: plan.seed,
+                    picks: hasPicks(picks) ? encodePlanPicks(picks) : null,
+                    anchor: shared.anchor === plan.anchor.id ? shared.anchor : null,
+                    query: '',
+                    stage: null,
+                },
+                'prescription',
+            )}`,
+            '',
+        )
     })
     lines.push('---', '', options.shareHref)
     return lines.join('\n')

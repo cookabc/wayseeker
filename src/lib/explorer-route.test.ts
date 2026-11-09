@@ -2,6 +2,29 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { readExplorerRoute, writeExplorerRoute } from './explorer-route.ts'
 
+test('only a known anchor attached to a valid prescription is honored', () => {
+    assert.equal(readExplorerRoute('?plan=k4x9f2&anchor=timing', ['timing']).anchor, 'timing')
+    for (const search of ['?anchor=timing', '?plan=invalid!&anchor=timing', '?plan=k4x9f2&anchor=unknown']) {
+        assert.equal(readExplorerRoute(search, ['timing']).anchor ?? null, null)
+    }
+    const url = writeExplorerRoute('https://wayseeker.example/?anchor=old', {
+        seed: null,
+        tool: 'timing',
+        plan: 'k4x9f2',
+        picks: null,
+        anchor: 'timing',
+    })
+    assert.equal(readExplorerRoute(url.search, ['timing']).anchor, 'timing')
+    const cleared = writeExplorerRoute(url.href, {
+        seed: null,
+        tool: 'timing',
+        plan: null,
+        picks: null,
+        anchor: 'timing',
+    })
+    assert.equal(cleared.searchParams.has('anchor'), false)
+})
+
 test('sharing restores the current tool as well as the ordering seed', () => {
     const url = writeExplorerRoute('https://wayseeker.example/?lang=zh#notes', {
         seed: 'abc123',

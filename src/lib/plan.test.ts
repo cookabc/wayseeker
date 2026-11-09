@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import TOOLS, { type Tool } from '../data/tools.ts'
 import { WORKFLOWS } from '../data/workflow.ts'
+import { explorerReturnHref } from './exploration-context.ts'
 import {
     encodePlanPicks,
     generatePlan,
@@ -17,6 +18,78 @@ import {
 import { SITE_URL } from './site.ts'
 
 const SEED = 'k4x9f2'
+
+test('existing seed-only plans preserve their published anchor and exact picks', () => {
+    const fixtures = [
+        {
+            seed: '000000',
+            anchor: 'before-click',
+            steps: ['neal-fun', 'impeccable', '60fps', 'onepagelove', 'whatships'],
+        },
+        {
+            seed: 'k4x9f2',
+            anchor: 'taste-skill',
+            steps: ['rebrand-gallery', 'taste-skill', 'awesome-ai-motion', 'namethatui', 'kenney'],
+        },
+        {
+            seed: 'abcdef',
+            anchor: 'open-design',
+            steps: ['zhongguo-colors', 'open-design', 'awesome-ai-motion', 'namethatui', 'whatships'],
+        },
+    ]
+    for (const fixture of fixtures) {
+        const plan = generatePlan(fixture.seed)
+        assert.equal(plan.anchor.id, fixture.anchor)
+        assert.deepEqual(
+            plan.steps.map((step) => step.tool.id),
+            fixture.steps,
+        )
+        assert.deepEqual(generatePlan(fixture.seed, [], null), plan)
+        assert.deepEqual(generatePlan(fixture.seed, [], 'unknown-tool'), plan)
+    }
+})
+
+test('every explicit anchor is included on its own route and keeps suggestions reproducible', () => {
+    for (const anchor of TOOLS) {
+        const first = generatePlan(SEED, [], anchor.id)
+        assert.equal(first.anchor.id, anchor.id)
+        const stage = WORKFLOWS.findIndex((flow) => flow.toolIds.includes(anchor.id))
+        assert.equal(first.steps[stage].tool.id, anchor.id)
+        assert.deepEqual(generatePlan(SEED, [], anchor.id), first)
+    }
+})
+
+test('explicit-anchor swaps keep the direction and the other four rows', () => {
+    const anchorId = 'timing'
+    const first = generatePlan(SEED, [], anchorId)
+    for (let stage = 0; stage < WORKFLOWS.length; stage++) {
+        const nextId = rerollStep(SEED, stage, first.steps[stage].tool.id, anchorId)
+        const picks = WORKFLOWS.map((_, index) => (index === stage ? nextId : null))
+        const next = generatePlan(SEED, picks, anchorId)
+        assert.equal(next.anchor.id, anchorId)
+        assert.notEqual(next.steps[stage].tool.id, first.steps[stage].tool.id)
+        assert.deepEqual(
+            next.steps.filter((_, index) => index !== stage),
+            first.steps.filter((_, index) => index !== stage),
+        )
+    }
+})
+
+test('anchored markdown retains the reproducible anchor link', () => {
+    const plan = generatePlan(SEED, [], 'timing')
+    const shareHref = 'https://wayseeker.example/?plan=k4x9f2&anchor=timing'
+    const markdown = planToMarkdown(plan, { lang: 'en', title: 'Timing plan', shareHref })
+    assert.ok(markdown.includes(shareHref))
+    assert.ok(markdown.includes('Timing'))
+    const detailLinks = markdown.split('\n').filter((line) => line.startsWith(`${SITE_URL}/t/`))
+    assert.equal(detailLinks.length, 5)
+    for (const href of detailLinks) {
+        const back = new URL(explorerReturnHref(new URL(href).search, 'timing'), SITE_URL)
+        assert.equal(back.searchParams.get('anchor'), 'timing')
+        assert.equal(back.searchParams.get('plan'), SEED)
+        assert.equal(back.hash, '#prescription')
+    }
+})
 
 test('a seed yields the same plan every time', () => {
     const first = generatePlan(SEED)
