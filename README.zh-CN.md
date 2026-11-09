@@ -39,12 +39,13 @@ Wayseeker 是一只给创作用的百子柜：首页先列出 29 种常见的将
 
 ## 文档
 
-每份文档以英文为主，中文版并列放在旁边。
+[DESIGN.md](DESIGN.md) 与 [PRODUCT.md](PRODUCT.md) 各有中文版并列放在旁边，下表如实反映这一点。
 
 | 英文 | 中文 | 内容 |
 | --- | --- | --- |
 | [DESIGN.md](DESIGN.md) | [DESIGN.zh-CN.md](DESIGN.zh-CN.md) | 视觉体系：配色、字型、布局、组件 |
 | [PRODUCT.md](PRODUCT.md) | [PRODUCT.zh-CN.md](PRODUCT.zh-CN.md) | 用户、定位、原则、无障碍 |
+| [docs/design-constraints.md](docs/design-constraints.md) | — | 仍然成立的约束：布局边界、主题、语言，以及什么算验证过 |
 
 ## 预览图管线
 

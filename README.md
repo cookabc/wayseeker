@@ -40,12 +40,13 @@ All styles live in `src/app/globals.css`: tokens for the four materials (rice pa
 
 ## Docs
 
-Every document exists in English first, with a Chinese edition beside it.
+[DESIGN.md](DESIGN.md) and [PRODUCT.md](PRODUCT.md) carry a Chinese edition beside them; the two English / Chinese tables below reflect that.
 
 | English | 中文 | What it covers |
 | --- | --- | --- |
 | [DESIGN.md](DESIGN.md) | [DESIGN.zh-CN.md](DESIGN.zh-CN.md) | Visual system: colour, type, layout, components |
 | [PRODUCT.md](PRODUCT.md) | [PRODUCT.zh-CN.md](PRODUCT.zh-CN.md) | Users, positioning, principles, accessibility |
+| [docs/design-constraints.md](docs/design-constraints.md) | — | Constraints that still hold: layout boundaries, theme, language, and what counts as verified |
 
 ## Preview pipeline
 
