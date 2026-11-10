@@ -73,12 +73,16 @@ test('forced colors retain visible selected stages, habits and drawers', async (
     await page.emulateMedia({ forcedColors: 'active' })
     test.skip(!await page.evaluate(() => matchMedia('(forced-colors: active)').matches), 'Engine does not emulate forced colors')
     await page.goto('/?tool=timing&stage=2#counter')
-    await expect(page.locator('.stage-tab[aria-pressed="true"]')).toHaveCount(1)
-    const stage = page.locator('.stage-tab[aria-pressed="true"]')
-    expect(await stage.evaluate(element => getComputedStyle(element).textDecorationLine)).toContain('underline')
-    expect(await page.locator('.habit[aria-pressed="true"] .habit-text').evaluate(element => getComputedStyle(element).textDecorationLine)).toContain('line-through')
+    // The stage/picks arrive in a post-hydration effect; the server-rendered
+    // DOM already has a pressed "All stages" tab, so toHaveCount(1) alone
+    // does not prove the URL state has been applied. Wait for stage 2 itself.
+    const stage = page.locator('.stage-tab[aria-pressed="true"]').filter({ hasText: /MAKE IT MOVE/i })
+    await expect(stage).toHaveCount(1)
+    await expect(stage).toHaveCSS('text-decoration-line', /underline/)
+    const habit = page.locator('.habit[aria-pressed="true"] .habit-text')
+    await expect(habit).toHaveCSS('text-decoration-line', /line-through/)
     const current = page.locator('.drawer[aria-current="true"] .drawer-label')
-    expect(await current.evaluate(element => Number.parseFloat(getComputedStyle(element).outlineWidth))).toBeGreaterThanOrEqual(2)
+    await expect.poll(async () => current.evaluate(element => Number.parseFloat(getComputedStyle(element).outlineWidth))).toBeGreaterThanOrEqual(2)
 })
 
 for (const percent of [200, 400]) test(`${percent} percent text keeps the page and visit actions within their columns`, async ({ page }) => {

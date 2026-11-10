@@ -55,10 +55,16 @@ test('a slow native clipboard request offers current text only after an explicit
     await page.getByRole('button', { name: 'Copy as Markdown', exact: true }).click()
     await page.getByRole('button', { name: 'Write a new one', exact: true }).click()
     const currentSeed = new URL(page.url()).searchParams.get('plan')
-    await page.locator('.site-nav-link').first().focus()
+    // "Write a new one" reveals the prescription and focuses its title in a
+    // requestAnimationFrame. Let that focus settle before moving it to the nav
+    // link, otherwise the rAF can fire later and steal focus back mid-test.
+    await expect(page.locator('.rx-plan-title')).toBeFocused()
+    const navLink = page.locator('.site-nav-link').first()
+    await navLink.focus()
+    await expect(navLink).toBeFocused()
     await page.clock.fastForward(8001)
     await expect(page.locator('.rx-slip .copy-status')).toContainText('still waiting for the browser')
-    await expect(page.locator('.site-nav-link').first()).toBeFocused()
+    await expect(navLink).toBeFocused()
     await expect(page.locator('.rx-slip .manual-copy')).toHaveCount(0)
     await page.getByRole('button', { name: 'Copy manually', exact: true }).click()
     const fallback = page.locator('.rx-slip .manual-copy textarea')

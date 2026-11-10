@@ -28,12 +28,19 @@ test('habits, drawers and search all dispense the same label', async ({ page }) 
 
 test('a prescription is reproducible and swaps one line at a time', async ({ page }) => {
     await page.goto('/?plan=k4x9f2')
-    await expect(page.locator('.rx-line')).toHaveCount(5)
-    const before = await page.locator('.rx-name').allTextContents()
+    // The plan is restored in a post-hydration effect; wait for all five names
+    // to be present before taking the baseline snapshot.
+    const names = page.locator('.rx-name')
+    await expect(names).toHaveCount(5)
+    const before = await names.allTextContents()
     await page.getByRole('button', { name: /Swap the Make it move line/ }).click()
-    const after = await page.locator('.rx-name').allTextContents()
-    expect(after[2]).not.toBe(before[2])
-    expect(after.filter((n, i) => n === before[i])).toHaveLength(4)
+    // Swapping re-renders the line with an entry animation; poll until the new
+    // set of five names has settled instead of reading a mid-render snapshot.
+    await expect.poll(async () => {
+        const after = await names.allTextContents()
+        return after.length === 5 && after[2] !== before[2] &&
+            after.filter((n, i) => n === before[i]).length === 4
+    }).toBe(true)
     expect(new URL(page.url()).searchParams.get('p')).toBeTruthy()
 })
 
