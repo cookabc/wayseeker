@@ -2639,3 +2639,9 @@ body {
         animation: none;
     }
 }
+
+/* 中英混排：中文页自动留白、行首标点挤压（Chromium 原生，不支持的浏览器忽略） */
+:lang(zh) {
+    text-autospace: normal;
+    text-spacing-trim: trim-start;
+}
