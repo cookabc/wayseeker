@@ -13,7 +13,7 @@ export const WORKFLOWS: Array<{
         question: { en: 'What should this feel like?', zh: '它应该是什么气质？' },
         description: {
             en: 'Start with a visual reference, a real identity, or a little useful strangeness.',
-            zh: '从真实视觉参考、品牌重塑或一点有趣的不确定开始。',
+            zh: '从真实的视觉参考、品牌重塑案例，或一点有趣的陌生感开始。',
         },
         toolIds: ['rebrand-gallery', 'yeguozi', 'inspora', 'wenyang', 'zhongguo-colors', 'neal-fun'],
     },
@@ -23,7 +23,7 @@ export const WORKFLOWS: Array<{
         question: { en: 'What makes it belong together?', zh: '怎样让一切属于同一个系统？' },
         description: {
             en: 'Turn references into tokens, components and decisions you can actually ship.',
-            zh: '把参考变成真正能落地的令牌、组件和设计决策。',
+            zh: '把参考转化为可用于交付的设计令牌、组件和设计决策。',
         },
         toolIds: ['open-design', 'impeccable', 'taste-skill', 'designmd-sh', 'designprompts', 'kami'],
     },
@@ -33,7 +33,7 @@ export const WORKFLOWS: Array<{
         question: { en: 'What should this interaction feel like?', zh: '这个交互应该是什么手感？' },
         description: {
             en: 'Study a great transition, understand its timing, then implement only what serves the idea.',
-            zh: '研究优秀的过渡、理解时机，只实现真正服务创意的部分。',
+            zh: '研究出色的过渡效果，理解节奏，只实现有助于表达创意的部分。',
         },
         toolIds: ['60fps', 'feralui', 'libraries-dev', 'timing', 'paper-shaders', 'awesome-ai-motion'],
     },

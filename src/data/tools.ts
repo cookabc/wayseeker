@@ -75,7 +75,7 @@ const TOOLS: Tool[] = [
         color: '#6e56cf',
         note: {
             en: 'When a surface needs expensive-looking motion without a heavy creative stack, I drop these in. Replaces custom shader experiments I will not maintain. Caveat: still check performance on low-end phones.',
-            zh: '需要贵气质的动态表面、又不想背沉重创意栈时，我直接用这套。能替代自己写又不维护的 shader 实验。注意：低端机仍要看性能。',
+            zh: '需要精致的动态表面、又不想引入一整套复杂的创意工具时，我直接用这套。能替代自己写、后续却疏于维护的 shader 实验。注意：低端机仍要看性能。',
         },
     },
     {
@@ -151,7 +151,7 @@ const TOOLS: Tool[] = [
         color: '#8e4ec6',
         note: {
             en: 'When a deck must live in the browser and move with Magic Move, I use this over Keynote. Replaces fighting export pipelines for agent-built slides. Caveat: design still needs hierarchy — animation will not save a bad outline.',
-            zh: '演示必须待在浏览器、还要 Magic Move 时，我用它而不是 Keynote。能替代为 Agent 做幻灯片时痛苦的导出链路。注意：动效救不了烂大纲，层级还是要做。',
+            zh: '演示必须在浏览器里播放、还要 Magic Move 效果时，我用它而不是 Keynote。能替代用 Agent 做幻灯片时繁琐的导出流程。注意：动效救不了烂大纲，层级还是要做。',
         },
     },
     {
@@ -169,7 +169,7 @@ const TOOLS: Tool[] = [
         color: '#8d8d86',
         note: {
             en: 'When Markdown previews feel cold and default, I switch to this parchment system. Replaces plain GitHub-flavored dumps for reading-heavy docs. Caveat: not every stakeholder wants warm paper — ask before standardizing.',
-            zh: 'Markdown 预览太冷太默认时，我换成这套羊皮纸气质。能替代 GitHub 风纯文本长文。注意：不是每个干系人都要暖纸感，先问再标准化。',
+            zh: 'Markdown 预览太冷淡、缺少变化时，我换成这套羊皮纸风格。能替代 GitHub 风纯文本长文。注意：并非所有参与者都喜欢暖色纸张风格，统一采用前先问问。',
         },
     },
     {
@@ -191,7 +191,7 @@ const TOOLS: Tool[] = [
         featured: true,
         note: {
             en: 'When I bootstrap a coding agent for UI work, I drop these SKILL.md files in first. Replaces hoping the model “has taste.” Caveat: still needs a real reference layout.',
-            zh: '当给做 UI 的编码 Agent 开工时，我先塞进这些 SKILL.md。能替代指望模型「自己有审美」。注意：仍要配真实参考布局。',
+            zh: '当编码 Agent 准备做 UI 时，我先给它这些 SKILL.md。能替代指望模型「自己有审美」。注意：仍要配真实参考布局。',
         },
     },
     {
@@ -282,7 +282,7 @@ const TOOLS: Tool[] = [
         color: '#3e63dd',
         note: {
             en: 'When I need layout patterns that still feel current, I browse this curated set. Replaces endless Awwwards tabs. Caveat: inspiration is not a clone — adapt structure to your content density.',
-            zh: '需要仍然不过时的版式模式时，我看这套精选。能替代无限开 Awwwards 标签页。注意：灵感不是克隆，结构要按你的内容密度改。',
+            zh: '需要经得起时间考验的版式参考时，我看这套精选。能替代无限开 Awwwards 标签页。注意：灵感不是克隆，结构要按你的内容密度改。',
         },
     },
     {
@@ -300,7 +300,7 @@ const TOOLS: Tool[] = [
         color: '#e54666',
         note: {
             en: 'When a story must fit one screen, I study this long-running one-pager archive. Replaces multi-page IA for simple offers. Caveat: one page still needs ruthless editing — length is not the goal.',
-            zh: '故事必须装进单屏时，我研究这套长寿的单页档案。能替代简单 offer 却硬做多页 IA。注意：单页更要狠删，长度不是目标。',
+            zh: '故事必须装进单屏时，我研究这套长寿的单页档案。能替代为简单的产品介绍硬做多页信息架构。注意：单页更要狠删，长度不是目标。',
         },
     },
     {
@@ -373,7 +373,7 @@ const TOOLS: Tool[] = [
         color: '#cc4e00',
         note: {
             en: 'When micro-interactions feel flat, I raise the bar with references here. Replaces “add a little bounce” without a target. Caveat: 60fps on desktop is not free on mid-range Android.',
-            zh: '微交互发闷时，我用这里的参考抬标准。能替代没有目标的「加一点弹跳」。注意：桌面 60fps 在中端安卓并不免费。',
+            zh: '微交互发闷时，我用这里的参考抬标准。能替代没有目标的「加一点弹跳」。注意：桌面上跑到 60fps 的效果，移到中端安卓仍要考虑性能开销。',
         },
     },
     {
@@ -391,7 +391,7 @@ const TOOLS: Tool[] = [
         color: '#0797b9',
         note: {
             en: 'When store screenshots or paywalls need framing, I study this gallery. Replaces inventing conversion copy in a vacuum. Caveat: patterns age — check dates and category fit.',
-            zh: '商店截图或付费墙要话术框架时，我研究这套画廊。能替代真空里发明转化文案。注意：模式会过时，看日期和品类是否合身。',
+            zh: '商店截图或付费墙需要文案框架时，我研究这套画廊。能替代脱离参考凭空写转化文案。注意：模式会过时，看日期和品类是否适合自己的产品。',
         },
     },
     {
@@ -409,7 +409,7 @@ const TOOLS: Tool[] = [
         color: '#00a2c7',
         note: {
             en: 'When a page feels rigid and needs physics-y life, I reach for these React bits. Replaces CSS-only hover that never surprises. Caveat: motion accessibility first — honor reduced motion.',
-            zh: '页面僵硬、需要物理感的「活着」时，我用这些 React 零件。能替代永远不意外的纯 CSS hover。注意：无障碍优先，尊重减少动态。',
+            zh: '页面显得僵硬、需要有物理感的交互时，我用这些 React 组件。能替代缺少惊喜的纯 CSS hover。注意：无障碍优先，尊重用户减少动态效果的设置。',
         },
     },
     {
@@ -428,7 +428,7 @@ const TOOLS: Tool[] = [
         featured: true,
         note: {
             en: 'When I’d otherwise write “that little grey control,” I look up the real name first. Replaces fuzzy agent prompts. Caveat: names vary slightly by system — still better than “thing.”',
-            zh: '否则我会写出「那个灰色小控件」时，我先查标准名字。能替代含糊的 Agent 提示。注意：各系统叫法略有差别，但总比「那个玩意儿」强。',
+            zh: '只想得起「那个灰色小控件」、叫不出名称时，我先查标准名字。能替代含糊的 Agent 提示。注意：各系统叫法略有差别，但总比「那个玩意儿」强。',
         },
     },
     {
@@ -446,7 +446,7 @@ const TOOLS: Tool[] = [
         color: '#e5484d',
         note: {
             en: 'When I need authentic Chinese pattern references for branding or illustration, I browse this catalogue first. Replaces generic pattern sites or digging through historical archives. Caveat: patterns are reinterpreted for modern use — verify cultural context if you are working on heritage or formal projects.',
-            zh: '当品牌或插画需要真正的中国传统纹样参考时，我先翻这个图鉴。能替代通用素材站或翻故纸堆。注意：纹样是为现代使用做了再诠释的，如果是 heritage 或正式文化项目，先核实文化语境。',
+            zh: '当品牌或插画需要真正的中国传统纹样参考时，我先翻这个图鉴。能替代通用素材站或翻故纸堆。注意：这些纹样为现代使用做过重新诠释，用于文化遗产或正式文化项目时，先核实文化语境。',
         },
     },
     {
@@ -464,7 +464,7 @@ const TOOLS: Tool[] = [
         color: '#1c2024',
         note: {
             en: 'When I need inspiration for a product launch or demo video, I browse this curated feed first. Replaces scrolling X hoping to catch a good launch post. Caveat: launch videos are ephemeral and trends move fast — use it for inspiration, not as a permanent archive.',
-            zh: '当我要为产品发布或演示视频找灵感时，我先翻这个精选合集。能替代在 X 上随缘刷到好发布。注意：发布视频时效性强、潮流变得快，把它当灵感库用，不要当永久档案。',
+            zh: '当我要为产品发布或演示视频找灵感时，我先翻这个精选合集。能替代在 X 上漫无目的地找好的发布视频。注意：发布视频时效性强、潮流变得快，把它当灵感库用，不要当永久档案。',
         },
     },
     {
@@ -482,7 +482,7 @@ const TOOLS: Tool[] = [
         color: '#0588f0',
         note: {
             en: 'When I need to see what design work shipped this week across disciplines, I let this hourly archive run. Replaces scrolling scattered X and Dribbble tabs hoping to catch something current. Caveat: “recent” is not “best” - treat it as a pulse check, not a canon.',
-            zh: '想看本周各学科都上线了什么设计作品时，我让这个小时级档案跑着。能替代在各路 X 和 Dribbble 标签页里随缘刷当下。注意：「近期」不等于「最好」，当脉搏看，别当经典。',
+            zh: '想看本周各个领域发布了什么设计作品时，我会翻这个按小时更新的档案。能替代在 X 和 Dribbble 的多个标签页里随手刷近期作品。注意：「近期」不等于「最好」，用它了解近期动向，别当作经典作品集。',
         },
     },
     {
@@ -501,7 +501,7 @@ const TOOLS: Tool[] = [
         githubUrl: 'https://github.com/guanmo-ai/awesome-ai-motion',
         note: {
             en: 'When I want to see what AI video can actually do before briefing one, I browse this gallery by use case. Replaces scrubbing X to find that one clip someone mentioned. Caveat: prompts are snapshots of a single run - treat them as starting points, not recipes that reproduce the result.',
-            zh: '想在给 AI 下视频需求前先摸清它能做到什么程度时，我按用途翻这个画廊。能替代在 X 上大海捞针找某条被提过的片子。注意：提示词是单次运行的快照，只能当起点，不能当能复现结果的配方。',
+            zh: '想在给 AI 下视频需求前先摸清它能做到什么程度时，我按用途翻这个画廊。能替代在 X 上大海捞针找某条被提过的片子。注意：提示词是单次运行的快照，只能当起点，不能当作保证复现结果的配方。',
         },
     },
     {
@@ -555,7 +555,7 @@ const TOOLS: Tool[] = [
         color: '#e0621f',
         note: {
             en: "When a launch needs custom 3D art that no asset pack covers, I send people to Kurt's free series — Little Fox Forest is the gentlest on-ramp to Blender. Replaces piecing together scattered YouTube tutorials. Caveat: the series teaches stylized illustration, not hard-surface or product modelling.",
-            zh: '当发布需要定制 3D 美术、素材包又覆盖不到时，我把人送到 Kurt 的免费系列——《小狐狸森林》是最温和的 Blender 入门。能替代在视频站上东拼西凑的零散教程。注意：偏风格化插画路线，硬表面与产品建模不在射程内。',
+            zh: '当产品发布需要定制 3D 美术、素材包又满足不了需求时，我会推荐 Kurt 的免费系列——《小狐狸森林》是最温和的 Blender 入门。能替代在视频站上东拼西凑的零散教程。注意：偏风格化插画路线，不涵盖硬表面与产品建模。',
         },
     },
 ]

@@ -39,7 +39,7 @@ Wayseeker 是一只给创作用的百子柜：首页先列出 29 种常见的将
 
 ## 文档
 
-[DESIGN.md](DESIGN.md) 与 [PRODUCT.md](PRODUCT.md) 各有中文版并列放在旁边，下表如实反映这一点。
+[DESIGN.md](DESIGN.md) 与 [PRODUCT.md](PRODUCT.md) 各有并列存放的中文版。
 
 | 英文 | 中文 | 内容 |
 | --- | --- | --- |
