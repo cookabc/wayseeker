@@ -51,6 +51,4 @@ test-results/
 playwright-report/
 
 # design review captures and tool run state
-.impeccable/review/
-.impeccable/questions/
-.impeccable/live/
+.impeccable/
