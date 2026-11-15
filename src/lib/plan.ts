@@ -16,8 +16,8 @@ import { SITE_URL } from './site.ts'
  * a plan keeps a direction instead of reading like five strangers.
  *
  * Identity is deterministic: (seed, picks, optional anchor) reproduces a plan.
- * Without an explicit anchor, existing seed links keep their original picks.
- * Swapping a step never changes the anchor or the other four steps.
+ * The anchor is included in its own stage. Swapping that stage updates the
+ * displayed starting tool without changing the other four steps.
  */
 
 export interface PlanStep {
@@ -29,7 +29,10 @@ export interface PlanStep {
 
 export interface Plan {
     seed: string
+    /** Direction used to rank candidates and reproduce swaps. */
     anchor: Tool
+    /** The committed tool in the anchor’s stage, used by the title and starting marker. */
+    startingTool: Tool
     steps: PlanStep[]
 }
 
@@ -74,15 +77,15 @@ export function generatePlan(seed: string, picks: PlanPicks = [], anchorId?: str
     const steps = WORKFLOWS.map((flow, index) => {
         const wanted = picks[index] ?? null
         const pinned = Boolean(wanted && flow.toolIds.includes(wanted))
-        const defaultPick =
-            anchorId === anchor.id && flow.toolIds.includes(anchor.id)
-                ? anchor
-                : stageCandidates(index, anchor, seed)[0]
+        const defaultPick = flow.toolIds.includes(anchor.id) ? anchor : stageCandidates(index, anchor, seed)[0]
         const tool = (pinned && wanted ? TOOLS.find((entry) => entry.id === wanted) : undefined) ?? defaultPick
         if (!tool) throw new Error(`generatePlan: route "${flow.id}" has no tools`)
         return { workflowId: flow.id, tool, pinned }
     })
-    return { seed, anchor, steps }
+    const anchorStage = WORKFLOWS.findIndex((flow) => flow.toolIds.includes(anchor.id))
+    const startingTool = steps[anchorStage]?.tool
+    if (!startingTool) throw new Error(`generatePlan: anchor "${anchor.id}" has no workflow stage`)
+    return { seed, anchor, startingTool, steps }
 }
 
 /**

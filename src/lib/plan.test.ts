@@ -19,12 +19,12 @@ import { SITE_URL } from './site.ts'
 
 const SEED = 'k4x9f2'
 
-test('existing seed-only plans preserve their published anchor and exact picks', () => {
+test('seed-only plans include their starting tool and reproduce exact picks', () => {
     const fixtures = [
         {
             seed: '000000',
             anchor: 'before-click',
-            steps: ['neal-fun', 'impeccable', '60fps', 'onepagelove', 'whatships'],
+            steps: ['neal-fun', 'impeccable', '60fps', 'before-click', 'whatships'],
         },
         {
             seed: 'k4x9f2',
@@ -67,6 +67,7 @@ test('explicit-anchor swaps keep the direction and the other four rows', () => {
         const picks = WORKFLOWS.map((_, index) => (index === stage ? nextId : null))
         const next = generatePlan(SEED, picks, anchorId)
         assert.equal(next.anchor.id, anchorId)
+        assert.equal(next.startingTool.id, stage === 2 ? nextId : anchorId)
         assert.notEqual(next.steps[stage].tool.id, first.steps[stage].tool.id)
         assert.deepEqual(
             next.steps.filter((_, index) => index !== stage),
@@ -221,4 +222,50 @@ test('picks serialization trims trailing defaults and parses back', () => {
     assert.equal(encodePlanPicks([null, null, null, null, null]), '')
     assert.deepEqual([...parsePlanPicks('.b')], [null, 'b'])
     assert.deepEqual([...parsePlanPicks('a.b.')], ['a', 'b', null])
+})
+
+test('the reported seed starts with Yeguozi and keeps its other stage choices', () => {
+    const plan = generatePlan('a1d0zk')
+    assert.equal(plan.anchor.id, 'yeguozi')
+    assert.equal(plan.startingTool.id, 'yeguozi')
+    assert.deepEqual(
+        plan.steps.map((step) => step.tool.id),
+        ['yeguozi', 'kami', 'paper-shaders', 'game-art-style', 'kurtips'],
+    )
+})
+
+test('every seed or explicit direction names a starting tool that is actually included', () => {
+    for (const seed of ['000000', 'k4x9f2', 'a1d0zk', 'abcdef', 'q1w2e3', 'zzzzzz']) {
+        for (const anchorId of [null, ...TOOLS.map((tool) => tool.id)]) {
+            const plan = generatePlan(seed, [], anchorId)
+            assert.equal(plan.startingTool.id, plan.anchor.id)
+            assert.ok(plan.steps.some((step) => step.tool.id === plan.startingTool.id))
+        }
+    }
+})
+
+test('swapping the starting stage updates its name while preserving other rows and link context', () => {
+    const original = generatePlan(SEED, [], 'timing')
+    const replacement = rerollStep(SEED, 2, 'timing', 'timing')
+    const changed = generatePlan(SEED, [null, null, replacement], 'timing')
+    assert.equal(changed.startingTool.id, replacement)
+    assert.equal(changed.anchor.id, 'timing')
+    assert.deepEqual(
+        changed.steps.filter((_, index) => index !== 2),
+        original.steps.filter((_, index) => index !== 2),
+    )
+    const shareHref = `https://wayseeker.example/?plan=${SEED}&anchor=timing&p=..${replacement}`
+    const markdown = planToMarkdown(changed, {
+        lang: 'en',
+        title: `A plan starting from ${changed.startingTool.name.en}`,
+        shareHref,
+    })
+    assert.ok(markdown.startsWith(`# A plan starting from ${changed.startingTool.name.en}`))
+    const detailLinks = markdown.split('\n').filter((line) => line.startsWith(`${SITE_URL}/t/`))
+    for (const href of detailLinks) {
+        const back = new URL(explorerReturnHref(new URL(href).search, replacement), SITE_URL)
+        assert.equal(back.searchParams.get('anchor'), 'timing')
+        assert.equal(back.searchParams.get('p'), `..${replacement}`)
+    }
+    assert.deepEqual(generatePlan(SEED, planPicks(changed), 'timing'), changed)
 })

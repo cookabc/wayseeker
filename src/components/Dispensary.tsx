@@ -391,7 +391,10 @@ export default function Dispensary() {
 
     const planMarkdown = () => {
         if (!plan) return ''
-        const title = planTitle(plan.anchor.name[lang] || plan.anchor.name.en, planTitleKey(plan.anchor))
+        const title = planTitle(
+            plan.startingTool.name[lang] || plan.startingTool.name.en,
+            planTitleKey(plan.startingTool),
+        )
         return planToMarkdown(plan, { lang, title, shareHref: planHref() })
     }
 
@@ -763,29 +766,33 @@ export default function Dispensary() {
                             <>
                                 <h3 ref={planTitleRef} tabIndex={-1} className="display rx-plan-title">
                                     {planTitle(
-                                        plan.anchor.name[lang] || plan.anchor.name.en,
-                                        planTitleKey(plan.anchor),
+                                        plan.startingTool.name[lang] || plan.startingTool.name.en,
+                                        planTitleKey(plan.startingTool),
                                     )}
                                 </h3>
                                 <p className="rx-basis">
-                                    {t('plan.basis', { name: plan.anchor.name[lang] || plan.anchor.name.en })}
+                                    {t('plan.basis', {
+                                        name: plan.startingTool.name[lang] || plan.startingTool.name.en,
+                                    })}
                                 </p>
                                 <ol className="rx-lines">
                                     {plan.steps.map((line, index) => {
                                         const flow = WORKFLOWS[index]
                                         const toolName = line.tool.name[lang] || line.tool.name.en
                                         const sharedTags = line.tool.tags.filter((tag) =>
-                                            plan.anchor.tags.includes(tag),
+                                            plan.startingTool.tags.includes(tag),
                                         )
                                         return (
                                             <li
                                                 key={line.workflowId}
-                                                className={`rx-line${line.tool.id === plan.anchor.id ? ' is-anchor' : ''}`}
+                                                className={`rx-line${line.tool.id === plan.startingTool.id ? ' is-anchor' : ''}`}
                                             >
                                                 <span
                                                     className="rx-letter"
                                                     title={
-                                                        line.tool.id === plan.anchor.id ? t('plan.anchor') : undefined
+                                                        line.tool.id === plan.startingTool.id
+                                                            ? t('plan.anchor')
+                                                            : undefined
                                                     }
                                                 >
                                                     {stageLetter(index)}
@@ -793,7 +800,7 @@ export default function Dispensary() {
                                                 <div key={line.tool.id} className="rx-swap-in min-w-0">
                                                     <span className="rx-stage caps">
                                                         {flow?.name[lang]}
-                                                        {line.tool.id === plan.anchor.id
+                                                        {line.tool.id === plan.startingTool.id
                                                             ? ` · ${t('plan.anchor')}`
                                                             : ''}
                                                         {line.pinned ? ` · ${t('plan.pinned')}` : ''}
@@ -809,7 +816,7 @@ export default function Dispensary() {
                                                         <s className="strike">{habitOf(line.tool, lang)}</s>
                                                     </span>
                                                     <span className="rx-relation">
-                                                        {line.tool.id === plan.anchor.id
+                                                        {line.tool.id === plan.startingTool.id
                                                             ? t('plan.anchorBasis')
                                                             : sharedTags.length > 0
                                                               ? t('plan.sharedTags', {

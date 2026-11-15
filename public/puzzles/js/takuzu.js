@@ -19,7 +19,8 @@ function mountTakuzu(opt) {
   if (!opt.sizes.includes(n)) n = opt.def;
   sizeSel.value = n;
 
-  let sol, given, cells, cellEls, startAt, timerId, done;
+  let sol, given, cells, cellEls = [], startAt, timerId, done;
+  const keyboard = PuzzleGrid(gridEl, () => cellEls, () => n);
 
   /* ---- 求解网格生成（回溯） ---- */
   function allRows(n) {
@@ -117,18 +118,21 @@ function mountTakuzu(opt) {
     gridEl.style.gridTemplateColumns = 'repeat(' + n + ',1fr)';
     cellEls = [];
     for (let i = 0; i < n * n; i++) {
-      const d = document.createElement('div');
+      const d = document.createElement('button');
+      d.type = 'button';
       d.className = 'tc e';
-      d.addEventListener('pointerdown', e => {
-        e.preventDefault();
+      d.addEventListener('pointerdown', () => keyboard.focus(i));
+      const change = reverse => {
         if (done || given[i]) return;
-        cells[i] = e.button === 2 ? (cells[i] + 2) % 3 : (cells[i] + 1) % 3;
+        cells[i] = (cells[i] + (reverse ? 2 : 1)) % 3;
         update();
-      });
-      d.addEventListener('contextmenu', e => e.preventDefault());
+      };
+      d.addEventListener('click', e => change(e.shiftKey));
+      d.addEventListener('contextmenu', e => { e.preventDefault(); change(true); });
       gridEl.appendChild(d);
       cellEls.push(d);
     }
+    keyboard.refresh();
   }
 
   function lineErr(line, base, stride, errSet) {
@@ -173,18 +177,25 @@ function mountTakuzu(opt) {
 
   function update() {
     const err = computeErr();
+    const filled = cells.filter(v => v !== 0).length;
+    if (!done && filled === cells.length && err.size === 0) {
+      done = true;
+      clearInterval(timerId);
+      gridEl.classList.add('won');
+    }
     for (let i = 0; i < n * n; i++) {
       const d = cellEls[i], v = cells[i];
       d.className = 'tc ' + (v === 0 ? 'e' : v === 1 ? 'b' : 'w')
         + (given[i] ? ' given' : '') + (err.has(i) ? ' err' : '');
       d.textContent = opt.skin === 'digits' ? (v === 1 ? '1' : v === 2 ? '0' : '') : '';
+      const value = v === 0 ? '空格' : opt.skin === 'digits' ? (v === 1 ? '数字 1' : '数字 0') : (v === 1 ? '黑色' : '白色');
+      d.setAttribute('aria-label', '第 ' + (Math.floor(i / n) + 1) + ' 行，第 ' + (i % n + 1) + ' 列，' + value
+        + (given[i] ? '，给定格，不可更改' : '') + (err.has(i) ? '，存在规则冲突' : ''));
+      d.setAttribute('aria-disabled', String(given[i] || done));
+      d.setAttribute('aria-invalid', String(err.has(i)));
     }
-    if (!done && !cells.includes(0) && err.size === 0) {
-      done = true;
-      clearInterval(timerId);
-      gridEl.classList.add('won');
-      msgEl.textContent = '✓ 完成！用时 ' + fmt(performance.now() - startAt);
-    }
+    msgEl.textContent = done ? '✓ 完成！用时 ' + fmt(performance.now() - startAt)
+      : '已填 ' + filled + ' / ' + cells.length + ' 格' + (err.size ? '；' + err.size + ' 格存在规则冲突，请继续修改。' : '');
   }
 
   sizeSel.onchange = () => {

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nonogram · 数织</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,15 +14,22 @@
 </div>
 <div class="stage">
   <div class="row">
-    <select id="pz"></select>
+    <select id="pz" aria-label="选择数织图案"></select>
     <button class="btn" id="modeFill">■ 填充</button>
     <button class="btn ghost" id="modeX">× 标记</button>
     <button class="btn ghost" id="clear">清 空</button>
   </div>
-  <div class="nwrap"><div id="grid" class="ngrid"></div></div>
-  <div class="stat" id="msg"></div>
-  <div class="hint">边缘数字表示该行/列中连续黑块的长度。左键（或「填充」模式）涂黑，右键（或「标记」模式）打 ×，支持按住拖动连续操作。</div>
+  <div class="row" id="board-pan" role="group" aria-label="查看棋盘各列" hidden>
+    <button class="btn ghost" id="pan-left" type="button" aria-label="向左查看棋盘">← 左移</button>
+    <output class="stat" id="pan-position" aria-live="polite"></output>
+    <button class="btn ghost" id="pan-right" type="button" aria-label="向右查看棋盘">右移 →</button>
+  </div>
+  <div class="nwrap"><div id="grid" class="ngrid" role="group" aria-label="数织棋盘" aria-describedby="rules keyboard-help"></div></div>
+  <div class="stat" id="msg" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="hint" id="rules">边缘数字表示该行/列中连续黑块的长度。左键（或「填充」模式）涂黑，右键（或「标记」模式）打 ×，支持按住拖动连续操作。</div>
+  <p class="hint keyboard-help" id="keyboard-help">方向键移动格子，Home / End 到行首 / 行尾，空格或 Enter 操作；Tab 离开棋盘。先选择「填充」或「标记」模式。大图案可用「左移 / 右移」查看各列。</p>
 </div>
+<script src="js/grid-input.js"></script>
 <script src="js/nonogram.js"></script>
 </body>
 </html>

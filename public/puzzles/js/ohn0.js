@@ -11,9 +11,11 @@
     sizeSel.appendChild(o);
   });
   let n = +localStorage.getItem('ohn0-n') || 6;
+  if (![5, 6, 7, 8, 9].includes(n)) n = 6;
   sizeSel.value = n;
 
-  let sol, locked, clue, cells, cellEls, startAt, timerId, done;
+  let sol, locked, clue, cells, cellEls = [], startAt, timerId, done;
+  const keyboard = PuzzleGrid(gridEl, () => cellEls, () => n);
 
   function countVisible(g, i) {
     const x = i % n, y = (i / n) | 0;
@@ -60,17 +62,20 @@
     gridEl.style.gridTemplateColumns = 'repeat(' + n + ',1fr)';
     cellEls = [];
     for (let i = 0; i < n * n; i++) {
-      const d = document.createElement('div');
-      d.addEventListener('pointerdown', e => {
-        e.preventDefault();
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.addEventListener('pointerdown', () => keyboard.focus(i));
+      const change = reverse => {
         if (done || locked[i]) return;
-        cells[i] = e.button === 2 ? (cells[i] + 2) % 3 : (cells[i] + 1) % 3;
+        cells[i] = (cells[i] + (reverse ? 2 : 1)) % 3;
         update();
-      });
-      d.addEventListener('contextmenu', e => e.preventDefault());
+      };
+      d.addEventListener('click', e => change(e.shiftKey));
+      d.addEventListener('contextmenu', e => { e.preventDefault(); change(true); });
       gridEl.appendChild(d);
       cellEls.push(d);
     }
+    keyboard.refresh();
   }
 
   function update() {
@@ -96,11 +101,19 @@
       }
       d.className = cls;
       d.textContent = text;
+      const value = v === 0 ? '未知' : v === 1 ? '黑点，数字 ' + text : '白块';
+      d.setAttribute('aria-label', '第 ' + (Math.floor(i / n) + 1) + ' 行，第 ' + (i % n + 1) + ' 列，' + value
+        + (locked[i] ? '，给定格，不可更改' : '') + (cls.includes('err') ? '，数字条件尚未成立' : ''));
+      d.setAttribute('aria-disabled', String(locked[i] || done));
+      d.setAttribute('aria-invalid', String(cls.includes('err')));
     }
+    if (!done) msgEl.textContent = '已填 ' + cells.filter(v => v !== 0).length + ' / ' + cells.length + ' 格'
+      + (wrong ? '；给定数字条件尚未全部成立，请继续填写或修改。' : '');
     if (!done && !empty && !wrong) {
       done = true;
       clearInterval(timerId);
       gridEl.classList.add('won');
+      cellEls.forEach(d => d.setAttribute('aria-disabled', 'true'));
       msgEl.textContent = '✓ 完成！用时 ' + fmt(performance.now() - startAt);
     }
   }

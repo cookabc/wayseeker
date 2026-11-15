@@ -171,7 +171,7 @@ Screenshot windows clip their contents; image bevels inherit their parent's radi
 
 ## Interaction behavior
 
-- A secondary counter action builds a prescription around the selected tool. Suggestions explain related directions; a pick without shared tags is labelled as independent. Existing seed-only links keep their original choices; explicit starting tools travel in shared links and exported Markdown.
+- A secondary counter action builds a prescription around the selected tool. Suggestions explain related directions; a pick without shared tags is labelled as independent. The chosen starting tool appears in its workflow stage. Replacing that stage updates the starting name and marker; the other four choices stay fixed. Shared links and Markdown retain the direction and committed choices.
 - Rewriting or building over a prescription offers one-level restore, including its number, swaps and starting tool. It remains available until leaving or reloading the page. The generated heading receives focus and scrolls below the sticky navigation.
 - Section navigation preserves the live homepage query. Detail-page section links keep the validated return context. Moving between homepage sections or using Back within the same prescription retains its undo.
 - The counter has a separate concise live status for tool and stage changes. Interactive links and the full label are outside that live region.

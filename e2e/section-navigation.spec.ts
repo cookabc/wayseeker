@@ -47,6 +47,8 @@ test('detail-page section navigation retains its safe return context', async ({ 
     const names = await page.locator('.rx-name').allTextContents()
     const expected = new URL(page.url()).searchParams
     await page.locator('.rx-name').nth(2).click()
+    await expect(page).toHaveURL(/\/t\/paper-shaders\?/)
+    await expect(page.getByRole('heading', { name: 'Paper Shaders', exact: true })).toBeVisible()
     const link = page.getByRole('link', { name: 'Find a tool', exact: true })
     await expect.poll(async () => new URL(await link.getAttribute('href') ?? '/', page.url()).searchParams.get('plan')).toBe('k4x9f2')
     await link.click()

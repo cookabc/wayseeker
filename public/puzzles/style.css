@@ -3,19 +3,19 @@
 html,body{height:100%;}
 body{background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow-x:hidden;}
 a{color:inherit;text-decoration:none;}
-.topbar{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;font-size:15px;letter-spacing:.1em;flex:none;}
-.back{opacity:.65;transition:.15s;}.back:hover{opacity:1;}
+.topbar{width:100%;max-width:760px;display:flex;align-items:center;justify-content:space-between;padding:8px 18px;font-size:15px;letter-spacing:.1em;flex:none;}
+.back{display:inline-flex;align-items:center;min-height:44px;min-width:44px;opacity:.65;transition:.15s;}.back:hover{opacity:1;}
 .title{font-weight:800;letter-spacing:.35em;}
 .stage{flex:1;width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:6px 16px 28px;}
 canvas{display:block;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:4px;}
-.btn{background:var(--fg);color:var(--bg);border:1px solid var(--fg);padding:10px 22px;font-size:14px;letter-spacing:.2em;cursor:pointer;border-radius:2px;font-family:inherit;transition:.12s;}
+.btn{background:var(--fg);color:var(--bg);border:1px solid var(--fg);padding:10px 22px;min-height:44px;font-size:14px;letter-spacing:.2em;cursor:pointer;border-radius:2px;font-family:inherit;transition:.12s;}
 .btn.ghost{background:transparent;color:var(--fg);}
 .btn:active{transform:scale(.96);}
 .btn.on{background:var(--fg);color:var(--bg);}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;}
 .hint{opacity:.55;font-size:13px;letter-spacing:.12em;text-align:center;line-height:1.9;max-width:560px;}
 .stat{font-variant-numeric:tabular-nums;letter-spacing:.1em;font-size:13px;opacity:.85;min-height:1.2em;}
-select{background:#000;color:#fff;border:1px solid #444;padding:8px 12px;font-family:inherit;letter-spacing:.1em;border-radius:2px;}
+select{min-height:44px;background:#000;color:#fff;border:1px solid #444;padding:8px 12px;font-family:inherit;letter-spacing:.1em;border-radius:2px;}
 
 /* ---- 首页菜单 ---- */
 .brand{padding:48px 0 6px;text-align:center;}
@@ -56,12 +56,13 @@ select{background:#000;color:#fff;border:1px solid #444;padding:8px 12px;font-fa
 .side .lab{font-size:12px;letter-spacing:.3em;opacity:.5;}
 
 /* ---- Nonogram ---- */
-.nwrap{overflow:auto;max-width:96vw;padding:4px;}
-.ngrid{display:grid;gap:0;user-select:none;-webkit-user-select:none;}
+.nwrap{overflow:auto;max-width:100%;padding:5px;scroll-padding-left:97px;}
+.ngrid{display:grid;gap:0;user-select:none;-webkit-user-select:none;width:max-content;}
 .nclue{display:flex;align-items:flex-end;justify-content:center;gap:2px;font-size:12px;font-weight:700;color:#bbb;padding:3px;font-variant-numeric:tabular-nums;}
 .nclue.col{flex-direction:column;}
-.nclue.row{flex-direction:row;justify-content:flex-end;align-items:center;gap:5px;padding-right:8px;}
-.nclue.done{color:#444;text-decoration:line-through;}
+.nclue.row{flex-direction:row;justify-content:flex-end;align-items:center;gap:5px;padding-right:8px;position:sticky;left:0;background:var(--bg);z-index:3;}
+.ncorner{position:sticky;left:0;background:var(--bg);z-index:3;}
+.nclue.done{color:#888;text-decoration:line-through;}
 .nc{border:1px solid #333;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#000;}
 .nc.fill{background:#000;}
 .nc.x{background:#fff;}
@@ -69,3 +70,19 @@ select{background:#000;color:#fff;border:1px solid #444;padding:8px 12px;font-fa
 .nc.b5{border-left-color:#999;border-left-width:2px;}
 .nc.t5{border-top-color:#999;border-top-width:2px;}
 .ngrid.won .nc.fill{animation:pop .5s ease;}
+
+/* Native cells keep the black-and-white board geometry. */
+.tc,.ic,.nc{padding:0;font-family:inherit;line-height:1;}
+.tc,.ic{border:0;}
+.tc:focus-visible,.ic:focus-visible,.nc:focus-visible,.keyboard-navigation .tc:focus,.keyboard-navigation .ic:focus,.keyboard-navigation .nc:focus{outline:2px solid #fff;outline-offset:2px;box-shadow:0 0 0 2px #000;z-index:2;}
+a:focus-visible,.btn:focus-visible,select:focus-visible{outline:2px solid #fff;outline-offset:4px;}
+.keyboard-help{font-size:12px;letter-spacing:.04em;max-width:560px;}
+@media(prefers-reduced-motion:reduce){.tc,.ic,.nc,.btn,.back{transition:none;animation:none!important;}}
+
+[hidden]{display:none!important;}
+#board-pan .btn{padding:10px 12px;letter-spacing:.08em;min-height:44px;}
+#board-pan .btn:disabled{opacity:.55;cursor:default;}
+#pan-position{font-size:12px;letter-spacing:0;}
+
+
+.nclue.row::before,.ncorner::before{content:"";position:absolute;left:-5px;top:0;bottom:0;width:5px;background:var(--bg);}

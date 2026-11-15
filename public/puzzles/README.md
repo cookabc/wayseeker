@@ -6,12 +6,11 @@
 
 ## 运行
 
-直接用浏览器打开 `index.html`，或：
+在仓库根目录运行：
 
 ```bash
-cd bw-puzzles
-python3 -m http.server 8000
-# 访问 http://localhost:8000
+python3 -m http.server 8000 --directory public
+# 访问 http://localhost:8000/puzzles/
 ```
 
 ## 游戏列表
@@ -27,14 +26,18 @@ python3 -m http.server 8000
 
 ## 操作
 
-- 桌面：鼠标左/右键；`black` 拼字关支持键盘输入。
-- 移动端：全部使用 Pointer Events，直接触摸游玩。
+- 五种格子游戏支持完整键盘操作：Tab 进入棋盘，方向键移动，Home / End 到行首 / 行尾，Ctrl + Home / End 到棋盘首尾，空格或 Enter 操作，Tab 离开。给定格可读取，但不可修改。
+- `0h h1`、`Binary`、`0h n0` 按住 Shift 反向切换；鼠标右键也可反向。每格提供坐标、格值、给定状态和规则冲突说明。
+- 数织先选择「填充」或「标记」模式，支持鼠标和触屏拖填。大棋盘溢出时提供「左移 / 右移」，行提示保持可见；方向键会将当前格滚入视区。清空可重新开始同一图案。
+- 操作结果与完成状态由独立状态区域反馈；计时不会持续打断读屏。
+- `black` 使用 Canvas 与指针交互，拼字关支持键盘输入；五种格子游戏的键盘能力不代表全部 Canvas 关卡都支持键盘。
 
 ## 文件结构
 
 ```
 index.html          菜单
 style.css           共享样式
+js/grid-input.js    格子游戏的键盘导航与焦点管理
 black.html          + js/black.js      50 关 Canvas 引擎
 0hh1.html           + js/takuzu.js     Takuzu 引擎（方块皮肤）
 binary.html         + js/takuzu.js     同一引擎（0/1 数字皮肤）

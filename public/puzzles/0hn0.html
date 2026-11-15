@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>0h n0 · 哦诺</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -10,19 +10,21 @@
 <div class="topbar">
   <a class="back" href="index.html">← 返回</a>
   <div class="title">0 h &nbsp; n 0</div>
-  <div class="stat" id="timer">00:00</div>
+  <div class="stat" id="timer" role="timer" aria-label="已用时间">00:00</div>
 </div>
 <div class="stage">
   <div class="row">
-    <select id="size"></select>
+    <select id="size" aria-label="棋盘尺寸"></select>
     <button class="btn" id="new">新 游 戏</button>
   </div>
-  <div id="grid" class="tgrid"></div>
-  <div class="stat" id="msg"></div>
-  <div class="hint">点按空格：未知 → 黑点 → 白块 → 未知（右键反向）。<br>
+  <div id="grid" class="tgrid" role="group" aria-label="黑白棋盘" aria-describedby="rules keyboard-help"></div>
+  <div class="stat" id="msg" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="hint" id="rules">点按空格：未知 → 黑点 → 白块 → 未知（右键反向）。<br>
     黑点的数字 = 它在上下左右四个方向上、被白块挡住之前能看到的黑点总数。<br>
     带小圆点的格子是给定的。让所有给定数字成立，并填满整个方阵。</div>
+  <p class="hint keyboard-help" id="keyboard-help">方向键移动格子，Home / End 到行首 / 行尾，空格或 Enter 操作；Tab 离开棋盘。按住 Shift 可反向切换。</p>
 </div>
+<script src="js/grid-input.js"></script>
 <script src="js/ohn0.js"></script>
 </body>
 </html>
