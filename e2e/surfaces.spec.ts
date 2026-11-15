@@ -43,3 +43,28 @@ test('keyboard users can skip navigation before entering the page', async ({ pag
     await page.keyboard.press('Enter')
     await expect(page.locator('#main-content')).toBeFocused()
 })
+
+for (const theme of ['light', 'dark'] as const) {
+    for (const lang of ['en', 'zh'] as const) {
+        test(`missing-page recovery stays readable and works in ${theme} / ${lang}`, async ({ page }) => {
+            await page.emulateMedia({ colorScheme: theme })
+            await setLanguage(page, lang)
+            await page.goto('/no-such-page')
+            const recovery = page.locator('.plain-page .btn')
+            const contrast = await recovery.evaluate((element) => {
+                const style = getComputedStyle(element)
+                const luminance = (color: string) => color.match(/[\d.]+/g)!.slice(0, 3)
+                    .map(Number).map((value) => {
+                        const channel = value / 255
+                        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+                    }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+                const foreground = luminance(style.color)
+                const background = luminance(style.backgroundColor)
+                return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05)
+            })
+            expect(contrast).toBeGreaterThanOrEqual(4.5)
+            await recovery.click()
+            await expect(page.locator('.habit-field')).toBeVisible()
+        })
+    }
+}
