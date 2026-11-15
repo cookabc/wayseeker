@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { setLanguage } from './language'
 
 test('loaded exploration keeps working when the connection is lost', async ({ page, context }) => {
     await page.addInitScript(() => {
@@ -55,7 +56,7 @@ test('delayed previews do not block reading, searching or making a prescription'
 for (const language of ['en', 'zh']) {
     test('font failures and the completed ink animation do not widen the prescription in ' + language, async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 })
-        await page.addInitScript(language => localStorage.setItem('i18nextLng', language), language)
+        await setLanguage(page, language)
         await page.route('**/*.woff2', route => route.abort('failed'))
         await page.goto('/?plan=k4x9f2&anchor=timing#prescription')
         await expect(page.locator('html')).toHaveAttribute('lang', language)

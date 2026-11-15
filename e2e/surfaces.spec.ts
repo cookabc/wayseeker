@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { setLanguage } from './language'
 import tools from '../src/data/tools'
 
 test.use({ reducedMotion: 'reduce' })
@@ -7,7 +8,7 @@ for (const lang of ['en', 'zh'] as const) {
     test(`every tool label fits its real content in ${lang}`, async ({ page, isMobile }) => {
         test.setTimeout(120_000)
         if (isMobile) await page.setViewportSize({ width: 320, height: 740 })
-        await page.addInitScript((language) => localStorage.setItem('i18nextLng', language), lang)
+        await setLanguage(page, lang)
         const errors: string[] = []
         page.on('pageerror', (error) => errors.push(error.message))
         for (const tool of tools) {

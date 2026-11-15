@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { setLanguage } from './language'
 
 test.use({ reducedMotion: 'reduce' })
 
@@ -50,7 +51,7 @@ for (const pageKind of [
 }
 
 test('the preferred legal language survives the way home and the next legal page', async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem('i18nextLng', 'zh'))
+    await setLanguage(page, 'zh')
     await page.goto('/privacy')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('隐私政策')
     await page.getByRole('link', { name: '返回首页', exact: true }).click()

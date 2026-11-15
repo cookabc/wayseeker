@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { setLanguage } from './language'
 
 const scenarios = [
     { width: 320, height: 844, lang: 'en', surface: 'detail', reducedMotion: 'no-preference' },
@@ -13,10 +14,10 @@ for (const scenario of scenarios) {
     test(`${scenario.surface} copy recovery is visible and selectable at ${scenario.width}px in ${scenario.lang}`, async ({ page }) => {
         await page.setViewportSize({ width: scenario.width, height: scenario.height })
         await page.emulateMedia({ reducedMotion: scenario.reducedMotion })
-        await page.addInitScript((lang) => {
-            localStorage.setItem('i18nextLng', lang)
+        await setLanguage(page, scenario.lang)
+        await page.addInitScript(() => {
             Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new Error('Denied')) } })
-        }, scenario.lang)
+        })
         await page.goto(scenario.surface === 'detail' ? '/t/timing' : '/?plan=k4x9f2#prescription')
         await page.evaluate(() => document.fonts.ready)
         const action = scenario.surface === 'detail'

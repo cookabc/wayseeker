@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test'
+import { setLanguage } from './language'
 
 test.use({ reducedMotion: 'reduce' })
 
 for (const lang of ['en', 'zh']) for (const theme of ['light', 'dark']) {
     test(`real fonts keep every layout within its viewport in ${lang} ${theme}`, async ({ page }) => {
         test.slow() // Eight real-font navigations across four viewport widths.
-        await page.addInitScript(({ lang, theme }) => {
-            localStorage.setItem('i18nextLng', lang)
+        await setLanguage(page, lang)
+        await page.addInitScript(({ theme }) => {
             localStorage.setItem('wayseeker-theme', theme)
         }, { lang, theme })
         for (const width of [320, 390, 768, 1440]) {

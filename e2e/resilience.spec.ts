@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { setLanguage } from './language'
 
 test.use({ reducedMotion: 'reduce' })
 
@@ -42,12 +43,12 @@ test('recovery stays primary on the missing page and resources can be disclosed'
 for (const lang of ['en', 'zh']) {
     test('prescriptions and copy recovery fit a 320px screen in ' + lang, async ({ page }) => {
         await page.setViewportSize({ width: 320, height: 740 })
-        await page.addInitScript((language) => {
-            localStorage.setItem('i18nextLng', language)
+        await setLanguage(page, lang)
+        await page.addInitScript(() => {
             Object.defineProperty(navigator, 'clipboard', {
                 value: { writeText: () => Promise.reject(new Error('Denied')) },
             })
-        }, lang)
+        })
         for (const anchor of ['timing', 'craftwork-websites', 'component-gallery']) {
             await page.goto('/?plan=k4x9f2&anchor=' + anchor + '#prescription')
             await expect(page.locator('html')).toHaveAttribute('lang', lang)

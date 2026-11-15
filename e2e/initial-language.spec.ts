@@ -86,7 +86,7 @@ test('switching writes a server-readable preference and refresh never renders th
     expect(await page.evaluate(() => window.__initialLanguageHeadings)).toEqual([zh.hero.title])
     await page.getByRole('button', { name: '切换到英文', exact: true }).click()
     await expect(page.locator('#hero-title')).toHaveAttribute('aria-label', en.hero.title)
-    expect((await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('en')
+    await expect.poll(async () => (await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('en')
 })
 
 test('unrelated localStorage values cannot override the server language', async ({ page, context }) => {
@@ -94,7 +94,7 @@ test('unrelated localStorage values cannot override the server language', async 
     const response = await page.goto('/')
     expectServerLanguage(await response!.text(), 'en')
     await expect(page.locator('#hero-title')).toHaveAttribute('aria-label', en.hero.title)
-    expect((await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('en')
+    await expect.poll(async () => (await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('en')
     expectServerLanguage(await (await page.reload())!.text(), 'en')
 })
 
