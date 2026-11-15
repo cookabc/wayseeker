@@ -43,7 +43,7 @@ test('Chinese homepage and legal text are readable with JavaScript disabled', as
     }
 })
 
-test('explicit cookie beats both a conflicting browser header and legacy storage', async ({ page, context, request, baseURL }) => {
+test('explicit cookie beats a conflicting browser header and unrelated storage', async ({ page, context, request, baseURL }) => {
     const response = await request.get('/', {
         headers: { Cookie: 'i18next=en', 'Accept-Language': 'zh-CN,zh;q=0.9' },
     })
@@ -53,7 +53,7 @@ test('explicit cookie beats both a conflicting browser header and legacy storage
     await page.goto('/')
     await expect(page.locator('#hero-title')).toHaveAttribute('aria-label', zh.hero.title)
     await expect(page.getByRole('button', { name: '切换到英文', exact: true })).toBeVisible()
-    expect(await page.evaluate(() => localStorage.getItem('i18nextLng'))).toBe('zh')
+    expect(await page.evaluate(() => localStorage.getItem('i18nextLng'))).toBe('en')
 })
 
 test('concurrent English and Chinese responses do not share language state', async ({ request }) => {
@@ -89,16 +89,13 @@ test('switching writes a server-readable preference and refresh never renders th
     expect((await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('en')
 })
 
-test('legacy localStorage-only Chinese preference migrates once and reaches the next server render', async ({ page, context }) => {
+test('unrelated localStorage values cannot override the server language', async ({ page, context }) => {
     await page.addInitScript(() => localStorage.setItem('i18nextLng', 'zh-CN'))
-    const firstResponse = await page.goto('/')
-    // The server cannot read localStorage. This old-client migration can still
-    // change language once; the cookie makes subsequent full loads consistent.
-    expectServerLanguage(await firstResponse!.text(), 'en')
-    await expect(page.locator('#hero-title')).toHaveAttribute('aria-label', zh.hero.title)
-    expect((await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('zh')
-    const reloaded = await page.reload()
-    expectServerLanguage(await reloaded!.text(), 'zh')
+    const response = await page.goto('/')
+    expectServerLanguage(await response!.text(), 'en')
+    await expect(page.locator('#hero-title')).toHaveAttribute('aria-label', en.hero.title)
+    expect((await context.cookies()).find((cookie) => cookie.name === 'i18next')?.value).toBe('en')
+    expectServerLanguage(await (await page.reload())!.text(), 'en')
 })
 
 test('language switching remains usable when cookies and localStorage are unavailable', async ({ page }) => {

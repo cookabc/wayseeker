@@ -38,7 +38,7 @@ export type PlanPicks = ReadonlyArray<string | null>
 
 const STAGE_SALT = 0x9e3779b1
 
-/** An explicit known tool can set the direction; otherwise keep legacy seed selection. */
+/** An explicit known tool can set the direction; otherwise select deterministically from the seed. */
 export function planAnchor(seed: string, anchorId?: string | null): Tool {
     const explicit = anchorId ? TOOLS.find((tool) => tool.id === anchorId) : undefined
     if (explicit) return explicit

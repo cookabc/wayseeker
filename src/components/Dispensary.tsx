@@ -121,7 +121,7 @@ export default function Dispensary() {
 
     useEffect(() => invalidateCopyFeedback(), [lang, invalidateCopyFeedback])
 
-    // Restore shared state (?tool, ?plan, ?p; legacy ?seed is ignored) on load and history moves.
+    // Restore shared state (?tool, ?plan, ?p) on load and history moves.
     const restoreRoute = useCallback(() => {
         if (syncedSearch.current === window.location.search) return
         syncedSearch.current = window.location.search

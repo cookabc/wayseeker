@@ -209,7 +209,7 @@
     letter-spacing: 0.02em;
 }
 
-/* Legacy names still used by the privacy / terms / 404 pages. */
+/* Shared typography for privacy, terms and not-found pages. */
 .index-label {
     font-family: var(--mono);
     font-size: 0.75rem;

@@ -38,16 +38,6 @@ function getCookiePreference(): SupportedLanguage | null {
     }
 }
 
-function getLegacyPreference(): SupportedLanguage | null {
-    try {
-        const stored = window.localStorage.getItem('i18nextLng')?.trim().toLowerCase()
-        if (!stored || !/^(?:en|zh)(?:-[a-z0-9]{1,8})*$/.test(stored)) return null
-        return stored.startsWith('zh') ? 'zh' : 'en'
-    } catch {
-        return null
-    }
-}
-
 export function I18nProvider({ children, initialLanguage = 'en' }: I18nProviderProps) {
     // Each server render and mounted provider owns its instance. A shared module
     // singleton can leak the most recent request's language into another request.
@@ -86,17 +76,11 @@ export function I18nProvider({ children, initialLanguage = 'en' }: I18nProviderP
             } catch {
                 // Keep the current choice usable when cookies are blocked.
             }
-            try {
-                window.localStorage.setItem('i18nextLng', normalized)
-            } catch {
-                // Keep language switching functional when storage is blocked.
-            }
         }
 
         i18nInstance.on('languageChanged', syncDocumentLang)
-        // Server-readable cookies win. Only an old localStorage-only preference
-        // needs a one-time post-hydration migration; it cannot be read by SSR.
-        const preferredLanguage = getCookiePreference() ?? getLegacyPreference() ?? initialLanguage
+        // Keep hydration aligned with the server-readable language preference.
+        const preferredLanguage = getCookiePreference() ?? initialLanguage
         if (normalizeLanguage(i18nInstance.language) !== preferredLanguage) {
             void i18nInstance.changeLanguage(preferredLanguage)
         } else {

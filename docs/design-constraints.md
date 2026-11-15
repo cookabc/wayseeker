@@ -3,8 +3,8 @@
 这份文件记录当前仍然有效的约束：视觉体系的硬规则、交互边界，以及"什么算验证过"。
 它不是验收过程的记录，也不复述某次评审发现过什么。
 
-视觉 token 的权威来源是 [DESIGN.md](DESIGN.md)（英文）与 [DESIGN.zh-CN.md](DESIGN.zh-CN.md)；
-产品定位与用户见 [PRODUCT.md](PRODUCT.md) / [PRODUCT.zh-CN.md](PRODUCT.zh-CN.md)。
+视觉 token 的权威来源是 [DESIGN.md](../DESIGN.md)（英文）与 [DESIGN.zh-CN.md](../DESIGN.zh-CN.md)；
+产品定位与用户见 [PRODUCT.md](../PRODUCT.md) / [PRODUCT.zh-CN.md](../PRODUCT.zh-CN.md)。
 
 ## 视觉体系
 
@@ -44,8 +44,7 @@ token 与组件同一个文件 —— 改动视觉体系时不需要在两个地
 
 英文为默认，中文随切换持久化。字符串在 `public/locales/{en,zh}/common.json`。
 首次访问由服务端读取有效语言 cookie，再按 `Accept-Language` 权重选择；显式 cookie 优先。
-每个 Provider 独立初始化翻译实例，避免并发请求串语言。旧版仅存 `localStorage` 的偏好
-需要一次客户端迁移，此后刷新可直接输出对应语言。
+每个 Provider 独立初始化翻译实例，避免并发请求串语言。语言偏好写入 cookie，刷新可直接输出对应语言。
 
 禁用 JavaScript 时中文首页与法律正文可直接阅读 —— 这不表示禁用后仍支持交互。
 
