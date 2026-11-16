@@ -8,11 +8,11 @@ const hintEl = document.getElementById('hint'), levelEl = document.getElementByI
 const mapPanel = document.getElementById('mapPanel');
 cv.width = W; cv.height = H;
 
+let canvasCssWidth = W;
 function fit() {
-  const s = Math.min(window.innerWidth - 32, window.innerHeight - 260, 640);
-  cv.style.width = s + 'px'; cv.style.height = s + 'px';
+  canvasCssWidth = cv.getBoundingClientRect().width || W;
 }
-addEventListener('resize', fit); fit();
+new ResizeObserver(fit).observe(cv); fit();
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const ri = (a, b) => Math.floor(rnd(a, b + 1));
@@ -20,7 +20,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function txt(t, x, y, s, c, w) {
   ctx.fillStyle = c || '#fff';
-  ctx.font = (w || 700) + ' ' + s + 'px -apple-system,"PingFang SC",sans-serif';
+  ctx.font = (w || 700) + ' ' + Math.max(s, Math.ceil(12 * W / canvasCssWidth)) + 'px -apple-system,"PingFang SC",sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(t, x, y);
 }
@@ -605,21 +605,96 @@ const LEVELS = [
 
 /* ================= 运行器 ================= */
 let idx = 0, L = null, S = null, pdown = false;
-const prog = JSON.parse(localStorage.getItem('bw-black') || '{}');
-const saveProg = () => localStorage.setItem('bw-black', JSON.stringify(prog));
+let keyboardMode = false;
+const cursor = { x: W / 2, y: H / 2 };
+const positionEl = document.getElementById('keyboard-position');
+const saveNotice = document.getElementById('save-notice');
+const saveStatus = document.getElementById('save-status');
+const mapButton = document.getElementById('map');
+const resetProgress = document.getElementById('reset-progress');
+let progressReadable = true, corruptProgress = false;
+function storageNotice(message) {
+  saveStatus.textContent = message;
+  saveNotice.hidden = false;
+  resetProgress.hidden = !corruptProgress;
+}
+function parseProgress(raw) {
+  const value = JSON.parse(raw || '{}');
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid progress');
+  return Object.fromEntries(Object.entries(value).filter(([key, completed]) => /^\d+$/.test(key) && Number(key) < LEVELS.length && completed === 1));
+}
+function readStoredProgress() {
+  let raw;
+  try {
+    raw = localStorage.getItem('bw-black');
+  } catch {
+    progressReadable = false; corruptProgress = false;
+    storageNotice('无法读取浏览器进度，本次记录暂存于页面中。请允许存储后重试，不会覆盖原记录。');
+    return null;
+  }
+  try {
+    const value = parseProgress(raw);
+    progressReadable = true; corruptProgress = false;
+    return value;
+  } catch {
+    progressReadable = false; corruptProgress = true;
+    storageNotice('已存进度无法识别，本次仍可游玩。重置前不会覆盖原记录。');
+    return null;
+  }
+}
+const prog = readStoredProgress() || {};
+function saveProg() {
+  if (!progressReadable) return false;
+  try {
+    localStorage.setItem('bw-black', JSON.stringify(prog));
+    saveNotice.hidden = true;
+    return true;
+  } catch {
+    storageNotice('进度未保存，本次仍可继续。请允许浏览器存储后重试保存。');
+    return false;
+  }
+}
+document.getElementById('retry-save').onclick = () => {
+  if (!progressReadable) {
+    const stored = readStoredProgress();
+    if (!stored) return;
+    Object.assign(prog, stored);
+  }
+  if (saveProg()) {
+    positionEl.textContent = '当前关卡进度已保存。';
+    cv.focus();
+  }
+};
+resetProgress.onclick = () => {
+  if (!confirm('重置无法读取的关卡记录，并保存本次已完成的关卡？此操作会替换浏览器中的原记录。')) return;
+  progressReadable = true; corruptProgress = false;
+  if (saveProg()) { positionEl.textContent = '本次关卡进度已保存。'; cv.focus(); }
+};
+function cursorStatus() {
+  positionEl.textContent = S.won
+    ? (idx < LEVELS.length - 1 ? '本关已完成，按 Enter 或空格继续。' : '第 50 关已完成，可选关或重玩。')
+    : '光标 ' + Math.round(cursor.x / W * 100) + '%，' + Math.round(cursor.y / H * 100) + '% · ' + (pdown ? '已按住，再按空格松开' : '已松开');
+}
 
 function load(i) {
+  pdown = false;
+  cursor.x = W / 2; cursor.y = H / 2;
   idx = clamp(i, 0, LEVELS.length - 1);
   L = LEVELS[idx]; S = L.make();
   S.won = false; S.wonT = 0; S.flash = 0;
   levelEl.textContent = (idx + 1) + ' / ' + LEVELS.length;
   hintEl.textContent = L.hint;
+  document.getElementById('prev').disabled = idx === 0;
+  document.getElementById('next').disabled = idx === LEVELS.length - 1;
   buildMap();
+  positionEl.textContent = '第 ' + (idx + 1) + ' 关 · ' + L.hint;
 }
 
 function win() {
   S.won = true; S.wonT = performance.now();
+  pdown = false;
   prog[idx] = 1; saveProg(); buildMap();
+  cursorStatus();
 }
 const after = () => { if (!S.won && L.solved && L.solved(S)) win(); };
 
@@ -630,6 +705,8 @@ function pos(e) {
 
 cv.addEventListener('pointerdown', e => {
   e.preventDefault();
+  keyboardMode = false;
+  cv.focus({ preventScroll: true });
   if (S.won) { if (idx < LEVELS.length - 1) load(idx + 1); return; }
   pdown = true;
   try { cv.setPointerCapture(e.pointerId); } catch (_) {}
@@ -647,25 +724,73 @@ cv.addEventListener('pointerup', e => {
   if (L.up) L.up(S, pos(e));
   after();
 });
-addEventListener('keydown', e => {
-  if (S.won || !L.key) return;
-  L.key(S, e.key); after();
+function release() {
+  if (!pdown) return;
+  pdown = false;
+  if (!S.won && L.up) L.up(S, cursor);
+  after();
+  cursor.x = clamp(cursor.x, 0, W); cursor.y = clamp(cursor.y, 0, H);
+  if (keyboardMode) cursorStatus();
+}
+cv.addEventListener('pointercancel', release);
+cv.addEventListener('lostpointercapture', release);
+cv.addEventListener('blur', release);
+cv.addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey || e.key === 'Tab') return;
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', ' ', 'Escape'].includes(e.key) && !L.key) return;
+  e.preventDefault();
+  keyboardMode = true;
+  if (S.won) {
+    if (!e.repeat && (e.key === 'Enter' || e.key === ' ') && idx < LEVELS.length - 1) load(idx + 1);
+    return;
+  }
+  if (e.key.startsWith('Arrow')) {
+    const step = e.shiftKey ? 60 : 15;
+    const margin = pdown ? 120 : 0;
+    cursor.x = clamp(cursor.x + (e.key === 'ArrowRight' ? step : e.key === 'ArrowLeft' ? -step : 0), -margin, W + margin);
+    cursor.y = clamp(cursor.y + (e.key === 'ArrowDown' ? step : e.key === 'ArrowUp' ? -step : 0), -margin, H + margin);
+    if (L.move) L.move(S, cursor, pdown);
+  } else if (e.key === 'Escape') release();
+  else if (e.key === ' ' && !e.repeat) {
+    if (pdown) release();
+    else { pdown = true; if (L.down) L.down(S, cursor); }
+  } else if (e.key === 'Enter' && !e.repeat) {
+    if (pdown) release();
+    if (L.down) L.down(S, cursor);
+    after();
+    if (!S.won && L.up) L.up(S, cursor);
+  } else if (L.key) L.key(S, e.key);
+  after(); cursorStatus();
 });
 
-document.getElementById('prev').onclick = () => load(idx - 1);
-document.getElementById('next').onclick = () => load(idx + 1);
-document.getElementById('re').onclick = () => load(idx);
-document.getElementById('map').onclick = () => mapPanel.classList.toggle('hide');
+function openLevel(i) { load(i); cv.focus(); }
+document.getElementById('prev').onclick = () => openLevel(idx - 1);
+document.getElementById('next').onclick = () => openLevel(idx + 1);
+document.getElementById('re').onclick = () => openLevel(idx);
+function closeMap() { mapPanel.hidden = true; mapButton.setAttribute('aria-expanded', 'false'); }
+mapButton.onclick = () => {
+  const open = mapPanel.hidden;
+  mapPanel.hidden = !open;
+  mapButton.setAttribute('aria-expanded', String(open));
+  if (open) mapPanel.querySelector('[aria-current="true"]').focus();
+};
+mapPanel.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); closeMap(); mapButton.focus(); }
+});
 
 function buildMap() {
-  mapPanel.innerHTML = '';
   LEVELS.forEach((_, i) => {
-    const b = document.createElement('button');
-    b.textContent = i + 1;
-    if (prog[i]) b.className = 'done';
-    if (i === idx) b.classList.add('cur');
-    b.onclick = () => load(i);
-    mapPanel.appendChild(b);
+    let b = mapPanel.children[i];
+    if (!b) {
+      b = document.createElement('button');
+      b.type = 'button'; b.textContent = i + 1;
+      b.onclick = () => { closeMap(); openLevel(i); };
+      mapPanel.appendChild(b);
+    }
+    b.classList.toggle('done', Boolean(prog[i]));
+    b.classList.toggle('cur', i === idx);
+    b.setAttribute('aria-current', String(i === idx));
+    b.setAttribute('aria-label', '第 ' + (i + 1) + ' 关，' + (prog[i] ? '已完成' : '未完成'));
   });
 }
 
@@ -688,6 +813,15 @@ function loop(t) {
     if (idx < LEVELS.length - 1) txt('点击屏幕继续 →', 375, 570, 24, 'rgba(255,255,255,.6)');
     else txt('50 关全部完成！', 375, 570, 26, 'rgba(255,255,255,.8)');
     ctx.globalAlpha = 1;
+  }
+  if (keyboardMode && document.activeElement === cv && !S.won) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cursor.x - 28, cursor.y); ctx.lineTo(cursor.x + 28, cursor.y);
+    ctx.moveTo(cursor.x, cursor.y - 28); ctx.lineTo(cursor.x, cursor.y + 28);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 10; ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.stroke();
+    ctx.restore();
   }
   requestAnimationFrame(loop);
 }

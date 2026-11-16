@@ -1924,7 +1924,7 @@
 }
 
 .plain-page .prose strong,
-.plain-page .prose a {
+.plain-page .prose a:not(.btn) {
     color: var(--ink);
 }
 

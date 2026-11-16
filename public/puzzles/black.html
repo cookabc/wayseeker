@@ -2,33 +2,43 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>black · 黑</title>
 <link rel="stylesheet" href="style.css">
 <style>
-#mapPanel{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;max-width:430px;width:100%;}
-#mapPanel.hide{display:none;}
-#mapPanel button{aspect-ratio:1;border:1px solid #444;background:#000;color:#fff;cursor:pointer;font-size:12px;font-family:inherit;border-radius:2px;}
+html,body{height:auto;}
+body{min-height:100svh;overflow-x:clip;}
+#cv{flex:none;width:100%;max-width:640px;height:auto;aspect-ratio:1;}
+#mapPanel{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));gap:8px;max-width:560px;width:100%;}
+#mapPanel button{aspect-ratio:1;min-height:44px;border:1px solid #666;background:#000;color:#fff;cursor:pointer;font-size:14px;font-family:inherit;border-radius:2px;}
 #mapPanel button.done{background:#fff;color:#000;border-color:#fff;}
 #mapPanel button.cur{outline:2px solid #fff;outline-offset:2px;}
+#mapPanel button:focus-visible,#cv:focus-visible{outline:3px solid #fff;outline-offset:5px;}
+.title{font-size:15px;}
+.btn:disabled{opacity:.55;cursor:default;}
+.save-notice{max-width:560px;text-align:center;line-height:1.6;font-size:14px;}
+#keyboard-position{font-size:12px;letter-spacing:0;}
 </style>
 </head>
 <body>
 <div class="topbar">
   <a class="back" href="index.html">← 返回</a>
-  <div class="title">B L A C K</div>
+  <h1 class="title" id="game-title">B L A C K</h1>
   <div class="stat" id="lvl">1 / 50</div>
 </div>
 <div class="stage">
-  <canvas id="cv" width="750" height="750"></canvas>
+  <canvas id="cv" width="750" height="750" tabindex="0" role="application" aria-label="black 画布游戏" aria-describedby="lvl hint keyboard-help keyboard-position">请使用支持 Canvas 的浏览器。</canvas>
   <div class="hint" id="hint"></div>
+  <p class="hint keyboard-help" id="keyboard-help">键盘：方向键移动光标，Shift 加速；Enter 点击，空格切换按住 / 松开，Esc 松开。拼字关可直接输入字母。</p>
+  <p class="hint" id="keyboard-position" role="status" aria-live="polite"></p>
+  <div class="save-notice" id="save-notice" hidden><p id="save-status" role="status"></p><div class="row"><button class="btn ghost" id="retry-save" type="button">重试保存进度</button><button class="btn ghost" id="reset-progress" type="button" hidden>重置无法读取的记录</button></div></div>
   <div class="row">
     <button class="btn ghost" id="prev">‹ 上一关</button>
     <button class="btn ghost" id="re">重玩本关</button>
     <button class="btn ghost" id="next">下一关 ›</button>
-    <button class="btn ghost" id="map">选关</button>
+    <button class="btn ghost" id="map" aria-expanded="false" aria-controls="mapPanel">选关</button>
   </div>
-  <div id="mapPanel" class="hide"></div>
+  <div id="mapPanel" aria-label="选择关卡" hidden></div>
   <div class="hint">唯一的目标：让整个屏幕变成纯黑色。每一关的玩法都不一样。</div>
 </div>
 <script src="js/black.js"></script>
