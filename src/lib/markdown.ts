@@ -105,7 +105,7 @@ function buildLegalMarkdown(page: 'privacy' | 'terms'): string {
             'Specifically, we may use:',
             '',
             '- **localStorage** for theme preference (`wayseeker-theme`)',
-            '- **cookie / localStorage** for language preference (i18next)',
+            '- **cookie** for language preference (i18next)',
             '',
             "When you open a tool link, you leave this site and visit the tool provider's website. We are not responsible for the privacy practices of external sites.",
             '',

@@ -9,7 +9,7 @@
     "intro": "{{site}} does not collect personal data, run analytics, or serve advertising cookies. The site only stores preferences on your device so the experience stays familiar between visits.",
     "storageIntro": "Specifically, we may use:",
     "themeStorage": "<storage>localStorage</storage> for theme preference (<key>wayseeker-theme</key>)",
-    "languageStorage": "<storage>cookie / localStorage</storage> for language preference (i18next)",
+    "languageStorage": "<storage>cookie</storage> for language preference (i18next)",
     "external": "When you open a tool link, you leave this site and visit the tool provider's website. We are not responsible for the privacy practices of external sites.",
     "changes": "If this policy changes, we will update the date above."
   },

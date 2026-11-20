@@ -9,7 +9,7 @@
     "intro": "{{site}} 不收集个人数据，不进行访问分析，也不使用广告 Cookie。本站仅在设备上保存偏好设置，以便在再次访问时保持熟悉的使用体验。",
     "storageIntro": "具体而言，我们可能使用以下存储方式：",
     "themeStorage": "<storage>localStorage</storage>：用于保存主题偏好（<key>wayseeker-theme</key>）",
-    "languageStorage": "<storage>cookie / localStorage</storage>：用于保存语言偏好（i18next）",
+    "languageStorage": "<storage>cookie</storage>：用于保存语言偏好（i18next）",
     "external": "打开工具链接时，你将离开本站并访问工具提供方的网站。我们不对外部网站的隐私处理方式负责。",
     "changes": "如果本政策发生变化，我们会更新上方日期。"
   },
