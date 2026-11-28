@@ -18,6 +18,13 @@
 | T11 URL 状态收口：explorer-route 接管 `?q`/`?stage`（上限=WORKFLOWS.length），Dispensary/exploration-context 接入 | R3 | done | 消灭 `/^[0-4]$/` 魔法正则与 4 处手写舞步 |
 | T12 联系邮箱单源 site.ts CONTACT_EMAIL | R4 | done | 3 处字面量 |
 | T13 prefersReducedMotion 单源 pointer-fx | R4 | done | 5 处手写 |
-| T14 对外契约形状锁：tools.json 键集合契约测试 | R5 | todo | 防 JSON 结构无意识漂移 |
-| T15 防回归：CSS 选择器孤儿扫描契约（globals.css 每个类必须在 src/e2e 语料出现） | R5 | todo | 词边界匹配，防「子串误活」 |
-| T16 独立复审 + 终态回填 + e2e 全量回归 | R5 | todo | 推送后以 CI 为准 |
+| T14 对外契约形状锁：tools.json 键集合契约测试 | R5 | done | 含 type='link' 常量语义 |
+| T15 防回归：CSS 选择器孤儿扫描契约（globals.css 每个类必须在 src/e2e 语料出现） | R5 | done | 词边界匹配，防「子串误活」 |
+| T16 独立复审 + 终态回填 + e2e 全量回归 | R5 | done | 全量 diff 复审无滑移；推送后以 CI 为准 |
+
+## 明释不收敛（审计线索）
+
+| 事项 | 理由 |
+| --- | --- |
+| puzzles 键盘 e2e 首轮冷启动时序抖动 | `public/puzzles` 是独立静态区（design-constraints 明示单独验证），本轮未触碰；同一用例在 main 与分支均可复现首轮偶发、复跑稳定，属环境时序而非代码缺陷。CI 稳定环境为权威结论。 |
+| llms.txt 工具行只有 en 描述 | 现状输出即对外契约；补 zh 描述改变 llms.txt 内容面，需产品决策（面向 agent 的 llms.txt 惯例倾向单语）后再做。 |
