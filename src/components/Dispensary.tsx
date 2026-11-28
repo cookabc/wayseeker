@@ -34,7 +34,7 @@ import {
     planToMarkdown,
     rerollStep,
 } from '@/lib/plan'
-import { pointerEffectsEnabled, releasePointer, trackPointer } from '@/lib/pointer-fx'
+import { pointerEffectsEnabled, prefersReducedMotion, releasePointer, trackPointer } from '@/lib/pointer-fx'
 import { randomSeed } from '@/lib/shuffle'
 
 const DEFAULT_TOOL = 'timing'
@@ -53,10 +53,6 @@ interface CopyFallback {
 
 function planIdentity(seed: string | null, picks: ReadonlyArray<string | null>, anchor: string | null) {
     return JSON.stringify([seed, encodePlanPicks(picks), anchor])
-}
-
-function reducedMotion() {
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 export default function Dispensary() {
@@ -145,7 +141,7 @@ export default function Dispensary() {
         currentPlanIdentity.current = restoredIdentity
         if (route.plan && !window.location.hash) {
             requestAnimationFrame(() =>
-                rxRef.current?.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth' }),
+                rxRef.current?.scrollIntoView({ behavior: prefersReducedMotion() ? 'instant' : 'smooth' }),
             )
         }
     }, [invalidateCopyFeedback])
@@ -227,7 +223,10 @@ export default function Dispensary() {
         if (options.reveal && counterRef.current) {
             const rect = counterRef.current.getBoundingClientRect()
             if (rect.top < 0 || rect.top > window.innerHeight * 0.6) {
-                counterRef.current.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth', block: 'start' })
+                counterRef.current.scrollIntoView({
+                    behavior: prefersReducedMotion() ? 'instant' : 'smooth',
+                    block: 'start',
+                })
             }
         }
         if (options.focusCounter) counterRef.current?.focus({ preventScroll: true })
@@ -324,7 +323,10 @@ export default function Dispensary() {
         url.hash = 'prescription'
         window.history.replaceState(window.history.state, '', url)
         requestAnimationFrame(() => {
-            planTitleRef.current?.scrollIntoView({ behavior: reducedMotion() ? 'instant' : 'smooth', block: 'start' })
+            planTitleRef.current?.scrollIntoView({
+                behavior: prefersReducedMotion() ? 'instant' : 'smooth',
+                block: 'start',
+            })
             planTitleRef.current?.focus({ preventScroll: true })
         })
     }

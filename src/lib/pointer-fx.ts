@@ -6,11 +6,18 @@
  * reduced-motion visitors get nothing — the static design is complete.
  */
 
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
+
+/** 布尔式动效偏好判定；需要监听变化时直接持有 matchMedia 查询对象（见 HabitPeek）。 */
+export function prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' && window.matchMedia(REDUCED_MOTION).matches
+}
+
 function enabled(): boolean {
     return (
         typeof window !== 'undefined' &&
         window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
-        !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        !prefersReducedMotion()
     )
 }
 
@@ -24,7 +31,7 @@ function resetItem(item: HTMLElement | undefined) {
 
 /**
  * Track the pointer over `host`: sets --mx/--my (px) on the host, and tilt
- * (--rx/--ry) plus glint position (--gx/--gy) on the hovered item.
+ * (--rx/--ry) plus glint position (--gx) on the hovered item.
  */
 export function trackPointer(event: React.PointerEvent<HTMLElement>, itemSelector: string, maxTilt: number) {
     if (!enabled()) return

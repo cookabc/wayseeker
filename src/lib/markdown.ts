@@ -1,8 +1,5 @@
 import tools, { getRelatedTools, getToolById, getToolPath, type Tool } from '../data/tools.ts'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from './site.ts'
-
-/** Contact address published on the privacy and terms pages. */
-const CONTACT_EMAIL = 'chuangcius@gmail.com'
+import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from './site.ts'
 
 /** Request header that carries the original page path through the proxy rewrite. */
 export const MARKDOWN_PATH_HEADER = 'x-markdown-path'

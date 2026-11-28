@@ -3,7 +3,7 @@
 import { ArrowLeftIcon } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { Trans, useTranslation } from 'react-i18next'
-import { SITE_NAME } from '@/lib/site'
+import { CONTACT_EMAIL, SITE_NAME } from '@/lib/site'
 
 export function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
     const { t } = useTranslation('legal')
@@ -45,10 +45,10 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
                     {kind === 'privacy' ? `${t('privacy.changes')} ` : null}
                     {t('contact')}{' '}
                     <a
-                        href="mailto:chuangcius@gmail.com"
+                        href={`mailto:${CONTACT_EMAIL}`}
                         className="text-foreground underline underline-offset-4 hover:opacity-70"
                     >
-                        chuangcius@gmail.com
+                        {CONTACT_EMAIL}
                     </a>
                     {t('period')}
                 </p>

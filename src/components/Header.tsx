@@ -6,6 +6,7 @@ import { type MouseEvent, useEffect, useRef, useState } from 'react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { useI18nReady } from '@/hooks/useI18nReady'
 import { sectionNavigationHref } from '@/lib/exploration-context'
+import { prefersReducedMotion } from '@/lib/pointer-fx'
 import { LanguageSwitcher } from './LanguageSwitcher'
 
 /** Two-by-two drawer front, one drawer marked: the cabinet at favicon size. */
@@ -82,10 +83,7 @@ export const Header = () => {
             window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: url.href }))
         }
         heading.focus({ preventScroll: true })
-        heading.scrollIntoView({
-            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-            block: 'start',
-        })
+        heading.scrollIntoView({ behavior: prefersReducedMotion() ? 'instant' : 'smooth', block: 'start' })
     }
 
     return (
