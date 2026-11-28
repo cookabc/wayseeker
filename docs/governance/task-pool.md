@@ -5,14 +5,14 @@
 
 | 任务 | 轮次 | 状态 | 备注 |
 | --- | --- | --- | --- |
-| T1 删除旧 IA `category` 族（字段+类型+4 函数+测试断言） | R1 | todo | PRODUCT.md 已声明按工作流组织；对外无导出 |
-| T2 删除 `getAllTags` + 标签路径测试 | R1 | todo | 0 生产调用方 |
-| T3 `filterTools` 收窄签名（去 activeTag）；llms.txt 文案对齐 | R1 | todo | 「tag filters」是不存在的功能 |
-| T4 删除 `verdictOf`/`VerdictLine` 平行 API | R1 | todo | 渲染走 labelOf/habitOf |
-| T5 删除 `encodeSeed` | R1 | todo | 仅自测调用 |
-| T6 删除 `ExplorerRoute.seed` 与 `?seed=` 读取；write 保留遗留参数清理 | R1 | todo | plan 已取代 shuffle 浏览；观察面行为不变 |
-| T7 删除 `WORKFLOW_BY_TOOL`、`toolWorkflowIndex` | R1 | todo | 0/仅测试调用 |
-| T8 删除 `WORKFLOWS[].description` 无渲染文案 | R1 | todo | 编辑资产删除，progress 记录 |
+| T1 删除旧 IA `category` 族（字段+类型+4 函数+测试断言） | R1 | done | PRODUCT.md 已声明按工作流组织；对外无导出 |
+| T2 删除 `getAllTags` + 标签路径测试 | R1 | done | 0 生产调用方 |
+| T3 `filterTools` 收窄签名（去 activeTag）；llms.txt 文案对齐 | R1 | done | 「tag filters」是不存在的功能 |
+| T4 删除 `verdictOf`/`VerdictLine` 平行 API | R1 | done | 渲染走 labelOf/habitOf |
+| T5 删除 `encodeSeed` | R1 | done | 仅自测调用 |
+| T6 删除 `ExplorerRoute.seed` 与 `?seed=` 读取；write 保留遗留参数清理 | R1 | done | plan 已取代 shuffle 浏览；观察面行为不变 |
+| T7 删除 `WORKFLOW_BY_TOOL`、`toolWorkflowIndex` | R1 | done | 0/仅测试调用 |
+| T8 删除 `WORKFLOWS[].description` 无渲染文案 | R1 | done | 编辑资产删除，progress 记录 |
 | T9 删除 `DrawerFront.dim`、`ToolPreviewImage.className/iconClassName`、`NoteCardData.color` | R2 | todo | 无调用方/自认未用 |
 | T10 孤儿 CSS 块删除（6 组）+ `@theme` 裁剪至实际消费 + `--gy` 死写删除 | R2 | todo | 删除前逐一复核 |
 | T11 URL 状态收口：explorer-route 接管 `?q`/`?stage`（上限=WORKFLOWS.length），Dispensary/exploration-context 接入 | R3 | todo | 消灭 `/^[0-4]$/` 魔法正则与 4 处手写舞步 |

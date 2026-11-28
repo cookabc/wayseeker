@@ -85,31 +85,3 @@ function splitChinese(note: string): Verdict | null {
 export function parseVerdict(note: string, language: Language): Verdict | null {
     return language === 'zh' ? splitChinese(note) : splitEnglish(note)
 }
-
-/** One rendered line of a verdict: either a move or the whole note. */
-export interface VerdictLine {
-    /** Which move this line is, or null when the note did not split. */
-    key: 'when' | 'replaces' | 'caveat' | null
-    text: string
-}
-
-/**
- * The three moves, or a single line holding the whole note.
- *
- * This is what the interface renders: three labelled moves when the note has
- * them, and one line when it does not.
- */
-export function verdictOf(note: string, language: Language): { moves: VerdictLine[]; complete: boolean } {
-    const parsed = parseVerdict(note, language)
-    if (parsed) {
-        return {
-            moves: [
-                { key: 'when', text: parsed.when },
-                { key: 'replaces', text: parsed.replaces },
-                { key: 'caveat', text: parsed.caveat },
-            ],
-            complete: true,
-        }
-    }
-    return { moves: [{ key: null, text: note.trim() }], complete: false }
-}

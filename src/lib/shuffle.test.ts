@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { encodeSeed, parseSeed, randomSeed, seededShuffle, seedToNumber } from './shuffle.ts'
+import { parseSeed, randomSeed, seededShuffle, seedToNumber } from './shuffle.ts'
 
 test('seededShuffle is deterministic for the same seed', () => {
     const input = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
@@ -30,11 +30,10 @@ test('seededShuffle differs across seeds for a larger input', () => {
     assert.notDeepEqual(a, b)
 })
 
-test('seed encode/parse round-trips', () => {
+test('randomSeed round-trips through parseSeed and seedToNumber', () => {
     const seed = randomSeed()
     const parsed = parseSeed(seed)
     assert.ok(parsed !== null)
-    assert.equal(encodeSeed(parsed), seed)
     assert.equal(seedToNumber(seed), parsed)
 })
 

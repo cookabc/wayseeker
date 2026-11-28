@@ -171,7 +171,7 @@ export default function Dispensary() {
 
     const matches = useMemo(() => {
         if (!query.trim()) return null
-        const ids = new Set(filterTools(TOOLS, 'all', query).map((tool) => tool.id))
+        const ids = new Set(filterTools(TOOLS, query).map((tool) => tool.id))
         // Habits are part of what a visitor searches for.
         for (const drawer of DRAWERS) {
             const q = query.toLowerCase().trim()
@@ -203,7 +203,6 @@ export default function Dispensary() {
         const nextPicks = next.picks ?? picks
         const nextAnchor = nextPlan ? (next.anchor !== undefined ? next.anchor : planAnchorId) : null
         const url = writeExplorerRoute(window.location.href, {
-            seed: null,
             tool: next.tool !== undefined ? next.tool : selected.tool.id,
             plan: nextPlan,
             picks: nextPlan && hasPicks(nextPicks) ? encodePlanPicks(nextPicks) : null,
@@ -382,7 +381,6 @@ export default function Dispensary() {
 
     const planHref = () =>
         writeExplorerRoute(new URL('/', window.location.origin).href, {
-            seed: null,
             tool: null,
             plan: planSeed,
             picks: planSeed && hasPicks(picks) ? encodePlanPicks(picks) : null,

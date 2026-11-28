@@ -2,13 +2,8 @@ import type { IconName } from '@/lib/icon-map'
 
 type LocaleText = { en: string; zh: string }
 
-/** Editorial section of the home wall the tool belongs under. */
-export type ToolCategory = 'design' | 'games' | 'other'
-
 export interface Tool {
     id: string
-    type: 'link'
-    category: ToolCategory
     name: LocaleText
     description: LocaleText
     tags: string[]
@@ -24,8 +19,6 @@ export interface Tool {
 const TOOLS: Tool[] = [
     {
         id: 'open-design',
-        type: 'link',
-        category: 'design',
         name: { en: 'Open Design', zh: 'Open Design' },
         description: {
             en: 'Open-source design studio with 31 skills and 72 design systems',
@@ -43,8 +36,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'zhongguo-colors',
-        type: 'link',
-        category: 'design',
         name: { en: '中国传统配色', zh: '中国传统配色' },
         description: {
             en: '742 traditional Chinese color swatches with HEX, RGB, CMYK values',
@@ -62,8 +53,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'paper-shaders',
-        type: 'link',
-        category: 'design',
         name: { en: 'Paper Shaders', zh: 'Paper Shaders' },
         description: {
             en: 'Ultra-fast zero-dependency shaders for designs',
@@ -80,8 +69,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'designprompts',
-        type: 'link',
-        category: 'design',
         name: {
             en: 'Design Prompts',
             zh: 'Design Prompts',
@@ -101,8 +88,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'impeccable',
-        type: 'link',
-        category: 'design',
         name: { en: 'Impeccable', zh: 'Impeccable' },
         description: {
             en: 'AI design intelligence with 23 commands for frontend design',
@@ -120,8 +105,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'yeguozi',
-        type: 'link',
-        category: 'design',
         name: { en: 'Yeguozi', zh: '野果子' },
         description: {
             en: 'Curated film stills for home color and décor inspiration',
@@ -138,8 +121,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'magic-slide',
-        type: 'link',
-        category: 'design',
         name: { en: 'Magic Slide', zh: 'Magic Slide' },
         description: {
             en: 'AI-powered HTML presentations with Magic Move transitions and browser editing',
@@ -156,8 +137,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'kami',
-        type: 'link',
-        category: 'design',
         name: { en: 'Kami', zh: 'Kami' },
         description: {
             en: 'Warm parchment design system for AI-assisted documents',
@@ -174,8 +153,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'taste-skill',
-        type: 'link',
-        category: 'design',
         name: {
             en: 'Taste Skill',
             zh: 'Taste Skill',
@@ -196,8 +173,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'designmd-sh',
-        type: 'link',
-        category: 'design',
         name: { en: 'designmd.sh', zh: 'designmd.sh' },
         description: {
             en: 'Public DESIGN.md registry for AI coding and design agents',
@@ -214,8 +189,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'neal-fun',
-        type: 'link',
-        category: 'games',
         name: { en: 'Neal.fun', zh: 'Neal.fun' },
         description: {
             en: 'Games, visualizations, interactives and weird stuff',
@@ -232,8 +205,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'kenney',
-        type: 'link',
-        category: 'games',
         name: { en: 'Kenney', zh: 'Kenney' },
         description: {
             en: 'Thousands of completely free game assets including sprites, 3D models, audio and tools',
@@ -250,8 +221,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'timing',
-        type: 'link',
-        category: 'design',
         name: { en: 'Timing', zh: 'Timing' },
         description: {
             en: 'Translate motion timing and springs across design and code platforms',
@@ -269,8 +238,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'craftwork-websites',
-        type: 'link',
-        category: 'design',
         name: { en: 'Craftwork Websites', zh: 'Craftwork Websites' },
         description: {
             en: 'Curated website design inspiration from the Curated.design community',
@@ -287,8 +254,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'onepagelove',
-        type: 'link',
-        category: 'design',
         name: { en: 'One Page Love', zh: 'One Page Love' },
         description: {
             en: 'One-page website inspiration gallery since 2008',
@@ -305,8 +270,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'component-gallery',
-        type: 'link',
-        category: 'design',
         name: { en: 'Component Gallery', zh: 'Component Gallery' },
         description: {
             en: 'Up-to-date repository of UI components from real design systems',
@@ -324,8 +287,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'mobbin',
-        type: 'link',
-        category: 'design',
         name: { en: 'Mobbin', zh: 'Mobbin' },
         description: {
             en: 'Real-world app and web UI screens, flows and patterns',
@@ -342,8 +303,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'rebrand-gallery',
-        type: 'link',
-        category: 'design',
         name: { en: 'Rebrand Gallery', zh: 'Rebrand Gallery' },
         description: {
             en: 'Curated gallery of rebrands and visual identity launches',
@@ -360,8 +319,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: '60fps',
-        type: 'link',
-        category: 'design',
         name: { en: '60fps', zh: '60fps' },
         description: {
             en: 'Collection of delightful UI animation details from best-in-class apps',
@@ -378,8 +335,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'before-click',
-        type: 'link',
-        category: 'design',
         name: { en: 'before.click', zh: 'before.click' },
         description: {
             en: 'Curated App Store screenshots, paywalls and onboarding flows',
@@ -396,8 +351,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'feralui',
-        type: 'link',
-        category: 'design',
         name: { en: 'FeralUI', zh: 'FeralUI' },
         description: {
             en: 'Playful, physics-driven React elements that move like real things',
@@ -414,8 +367,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'namethatui',
-        type: 'link',
-        category: 'design',
         name: { en: 'NameThatUI', zh: 'NameThatUI' },
         description: {
             en: 'Visual dictionary of UI elements: learn the real name and prompt your coding agent with precision',
@@ -433,8 +384,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'wenyang',
-        type: 'link',
-        category: 'design',
         name: { en: 'Wenyang', zh: '文样' },
         description: {
             en: 'A catalogue of Chinese traditional patterns, redrawn and open-sourced for modern design',
@@ -451,8 +400,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'whatships',
-        type: 'link',
-        category: 'other',
         name: { en: 'What Ships', zh: 'What Ships' },
         description: {
             en: 'A curated edit of startup launch videos, demos, and product walkthroughs from X',
@@ -469,8 +416,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'inspora',
-        type: 'link',
-        category: 'design',
         name: { en: 'Inspora', zh: 'Inspora' },
         description: {
             en: 'A curated archive of recent visual design and creative work, updated hourly',
@@ -487,8 +432,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'awesome-ai-motion',
-        type: 'link',
-        category: 'design',
         name: { en: 'Awesome AI Motion', zh: 'Awesome AI Motion' },
         description: {
             en: 'Curated gallery of 460+ AI motion works with public prompts and source code',
@@ -506,8 +449,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'libraries-dev',
-        type: 'link',
-        category: 'design',
         name: { en: 'Libraries.dev', zh: 'Libraries.dev' },
         description: {
             en: 'High-crafted UI effect libraries that ship as copy-paste prompts for coding agents',
@@ -524,8 +465,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'game-art-style',
-        type: 'link',
-        category: 'games',
         name: { en: 'Game Art Style', zh: '游戏美术风格' },
         description: {
             en: 'Visual atlas of 37 game art styles mapped to 103 real games',
@@ -542,8 +481,6 @@ const TOOLS: Tool[] = [
     },
     {
         id: 'kurtips',
-        type: 'link',
-        category: 'design',
         name: { en: 'KurTips', zh: 'KurTips' },
         description: {
             en: "3D artist Kurt Wei's free Blender series — Little Fox Forest took a million beginners into 3D",
@@ -559,16 +496,6 @@ const TOOLS: Tool[] = [
         },
     },
 ]
-
-export function getAllTags(tools: Tool[]): string[] {
-    const set = new Set<string>()
-    for (const tool of tools) {
-        for (const tag of tool.tags) {
-            set.add(tag)
-        }
-    }
-    return Array.from(set).sort()
-}
 
 const TAG_ACRONYMS = new Set(['ai', 'ui', 'pm', 'cli', 'api', 'md'])
 
@@ -615,43 +542,6 @@ export function getRelatedTools(tool: Tool, limit = 3): Tool[] {
         )
         .slice(0, limit)
         .map(({ candidate }) => candidate)
-}
-
-export const CATEGORY_ORDER: ToolCategory[] = ['design', 'games', 'other']
-
-export const CATEGORY_LABELS: Record<ToolCategory, { en: string; zh: string; eyebrow: { en: string; zh: string } }> = {
-    design: {
-        en: 'Design',
-        zh: '设计',
-        eyebrow: { en: 'Visual craft', zh: '视觉工艺' },
-    },
-    games: {
-        en: 'Games',
-        zh: '游戏',
-        eyebrow: { en: 'Play & systems', zh: '玩法与系统' },
-    },
-    other: {
-        en: 'Else',
-        zh: '其他',
-        eyebrow: { en: 'Discovery feed', zh: '发现源' },
-    },
-}
-
-export function getToolCategory(tool: Tool): ToolCategory {
-    return tool.category
-}
-
-export function groupToolsByCategory(list: Tool[]): Record<ToolCategory, Tool[]> {
-    const grouped: Record<ToolCategory, Tool[]> = {
-        design: [],
-        games: [],
-        other: [],
-    }
-    for (const tool of list) {
-        const category = getToolCategory(tool)
-        grouped[category].push(tool)
-    }
-    return grouped
 }
 
 export default TOOLS

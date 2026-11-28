@@ -1,6 +1,7 @@
 /**
- * mulberry32 — tiny deterministic PRNG so a shuffle can be reproduced from a
- * seed shared in the URL (?seed=...).
+ * mulberry32 — tiny deterministic PRNG so a generated plan is reproducible
+ * from the seed carried in the URL (?plan=...). Plan seeds share the same
+ * lowercase base-36 alphabet as the explorer seed format they replaced.
  */
 function mulberry32(seed: number): () => number {
     let a = seed >>> 0
@@ -39,11 +40,6 @@ export function parseSeed(value: string | null): number | null {
     if (!lowered.split('').every((ch) => SEED_ALPHABET.includes(ch))) return null
     const parsed = Number.parseInt(lowered, 36)
     return Number.isSafeInteger(parsed) ? parsed : null
-}
-
-/** Numeric seed → URL-safe string (6 chars, matching randomSeed's width). */
-export function encodeSeed(seed: number): string {
-    return seed.toString(36).padStart(6, '0')
 }
 
 /** URL seed string → numeric seed for seededShuffle (assumes parseSeed passed). */

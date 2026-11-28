@@ -48,6 +48,8 @@
 - **E17 联系邮箱 3 处字面量**：markdown.ts CONTACT_EMAIL / structured-data.ts / LegalPage.tsx（href+text）。
 - **E18 prefers-reduced-motion 手写 5 处**：Dispensary.reducedMotion、theme-switch
   .prefersReducedMotion、Header 内联、HabitPeek 监听、pointer-fx.enabled 内部。
+- **E20 内部恒定字段 `type: 'link'`**：Tool 接口与 30 条数据各带一份恒定值，唯一读取方是
+  tools.json 导出（对外契约字段）。→ 内部删除，导出处成形为常量并注明契约语义。
 - **E19 对外契约无形状锁**：tools.json 键集合无契约测试，公共 JSON 结构可无意识漂移
   （type 字段去留这类决定无防回归承载点）。
 
@@ -57,3 +59,4 @@
 
 | 轮 | 内容 | Commit |
 | --- | --- | --- |
+| R1 | 数据模型死代码出清：旧 IA `category` 族（字段+类型+4 函数）、`getAllTags`、`filterTools` activeTag 参数收窄、`verdictOf` 平行 API、`encodeSeed`、`?seed=` 路由读取（write 保留遗留参数清理）、`WORKFLOW_BY_TOOL`、`toolWorkflowIndex`、`WORKFLOWS[].description` 无渲染文案、内部恒定字段 `type: 'link'`（tools.json 字节级不变已验证）、llms.txt「tag filters」失实文案对齐；测试同步收敛 | (本 commit) |
