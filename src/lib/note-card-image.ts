@@ -17,8 +17,6 @@ export interface NoteCardData {
     label: string
     /** Localized attribution prefix, e.g. "Curator's note". */
     attributionLabel: string
-    /** Accent color associated with the tool (kept for callers; unused). */
-    color?: string
     /** Drawer code, e.g. "C4". */
     code?: string
     /** Localized site brand line rendered at the bottom. */

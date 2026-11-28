@@ -9,7 +9,6 @@ interface DrawerFrontProps {
     drawer: Drawer
     lang: Language
     current?: boolean
-    dim?: boolean
     /** Render as a button that selects in place… */
     onSelect?: (drawer: Drawer) => void
     /** …or as a link to the tool's label page. */
@@ -17,9 +16,9 @@ interface DrawerFrontProps {
 }
 
 /** One drawer front: code, a brass-framed paper label, and a pull. */
-export function DrawerFront({ drawer, lang, current = false, dim = false, onSelect, href }: DrawerFrontProps) {
+export function DrawerFront({ drawer, lang, current = false, onSelect, href }: DrawerFrontProps) {
     const name = drawer.tool.name[lang] || drawer.tool.name.en
-    const className = `drawer${dim ? ' is-dim' : ''}`
+    const className = 'drawer'
     const inner = (
         <>
             <span className="drawer-code">{drawer.code}</span>

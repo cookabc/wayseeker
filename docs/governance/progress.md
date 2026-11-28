@@ -59,4 +59,5 @@
 
 | 轮 | 内容 | Commit |
 | --- | --- | --- |
+| R2 | 组件与 CSS 死代码出清：DrawerFront.dim prop（.habit.is-dim/.drawer.is-dim 双孤儿规则同删）、ToolPreviewImage className/iconClassName 无调用方 props、NoteCardData.color（注释自认未用）、pointer-fx --gy 死写、孤儿 CSS 块 7 组（.index-label/.display-heading/.measure/.cabinet-reset/.rx-anchor/.insert 家族减 .insert-links）、@theme 裁剪至实际消费的 --color-foreground；测试同步 | (本 commit) |
 | R1 | 数据模型死代码出清：旧 IA `category` 族（字段+类型+4 函数）、`getAllTags`、`filterTools` activeTag 参数收窄、`verdictOf` 平行 API、`encodeSeed`、`?seed=` 路由读取（write 保留遗留参数清理）、`WORKFLOW_BY_TOOL`、`toolWorkflowIndex`、`WORKFLOWS[].description` 无渲染文案、内部恒定字段 `type: 'link'`（tools.json 字节级不变已验证）、llms.txt「tag filters」失实文案对齐；测试同步收敛 | (本 commit) |

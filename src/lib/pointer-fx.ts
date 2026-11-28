@@ -18,7 +18,8 @@ const lastItem = new WeakMap<HTMLElement, HTMLElement>()
 
 function resetItem(item: HTMLElement | undefined) {
     if (!item) return
-    for (const name of ['--rx', '--ry', '--gx', '--gy']) item.style.removeProperty(name)
+    // --gx 载入 glint 渐变；--rx/--ry 载入倾斜。--gy 无消费者，不写也不清。
+    for (const name of ['--rx', '--ry', '--gx']) item.style.removeProperty(name)
 }
 
 /**
@@ -46,7 +47,6 @@ export function trackPointer(event: React.PointerEvent<HTMLElement>, itemSelecto
     item.style.setProperty('--rx', `${(-py * maxTilt).toFixed(2)}deg`)
     item.style.setProperty('--ry', `${(px * maxTilt).toFixed(2)}deg`)
     item.style.setProperty('--gx', `${((px + 0.5) * 100).toFixed(1)}%`)
-    item.style.setProperty('--gy', `${((py + 0.5) * 100).toFixed(1)}%`)
 }
 
 export function releasePointer(event: React.PointerEvent<HTMLElement>) {
