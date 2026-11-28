@@ -15,7 +15,7 @@
 | T8 删除 `WORKFLOWS[].description` 无渲染文案 | R1 | done | 编辑资产删除，progress 记录 |
 | T9 删除 `DrawerFront.dim`、`ToolPreviewImage.className/iconClassName`、`NoteCardData.color` | R2 | done | 无调用方/自认未用 |
 | T10 孤儿 CSS 块删除（7 组，含复核新发现的 .measure 与 .habit/.drawer.is-dim）+ `@theme` 裁剪至实际消费 + `--gy` 死写删除 | R2 | done | 词边界复核避免子串误活 |
-| T11 URL 状态收口：explorer-route 接管 `?q`/`?stage`（上限=WORKFLOWS.length），Dispensary/exploration-context 接入 | R3 | todo | 消灭 `/^[0-4]$/` 魔法正则与 4 处手写舞步 |
+| T11 URL 状态收口：explorer-route 接管 `?q`/`?stage`（上限=WORKFLOWS.length），Dispensary/exploration-context 接入 | R3 | done | 消灭 `/^[0-4]$/` 魔法正则与 4 处手写舞步 |
 | T12 联系邮箱单源 site.ts CONTACT_EMAIL | R4 | todo | 3 处字面量 |
 | T13 prefersReducedMotion 单源 pointer-fx | R4 | todo | 5 处手写 |
 | T14 对外契约形状锁：tools.json 键集合契约测试 | R5 | todo | 防 JSON 结构无意识漂移 |

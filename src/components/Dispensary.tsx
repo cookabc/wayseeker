@@ -23,7 +23,7 @@ import { WORKFLOWS } from '@/data/workflow'
 import { useI18nReady } from '@/hooks/useI18nReady'
 import { CABINET_ROWS, DRAWERS, type Drawer, drawerOf, drawersInStage, habitOf, stageLetter } from '@/lib/drawers'
 import { toolDetailHref } from '@/lib/exploration-context'
-import { readExplorerRoute, writeExplorerRoute } from '@/lib/explorer-route'
+import { QUERY_CAP, readExplorerRoute, writeExplorerRoute } from '@/lib/explorer-route'
 import { filterTools, getDomain } from '@/lib/filter-tools'
 import {
     encodePlanPicks,
@@ -121,7 +121,7 @@ export default function Dispensary() {
 
     useEffect(() => invalidateCopyFeedback(), [lang, invalidateCopyFeedback])
 
-    // Restore shared state (?tool, ?plan, ?p) on load and history moves.
+    // Restore shared state (?tool, ?plan, ?p, ?q, ?stage) on load and history moves.
     const restoreRoute = useCallback(() => {
         if (syncedSearch.current === window.location.search) return
         syncedSearch.current = window.location.search
@@ -130,10 +130,8 @@ export default function Dispensary() {
             TOOLS.map((tool) => tool.id),
         )
         setSelectedId(route.tool ?? DEFAULT_TOOL)
-        const params = new URLSearchParams(window.location.search)
-        setQuery(params.get('q')?.slice(0, 200) ?? '')
-        const restoredStage = params.get('stage')
-        setStageFilter(restoredStage !== null && /^[0-4]$/.test(restoredStage) ? Number(restoredStage) : null)
+        setQuery(route.query ?? '')
+        setStageFilter(route.stage)
         setPlanSeed(route.plan)
         setPlanAnchorId(route.anchor ?? null)
         const restoredPicks = route.plan && route.picks ? [...parsePlanPicks(route.picks)] : []
@@ -198,20 +196,23 @@ export default function Dispensary() {
         plan?: string | null
         picks?: Array<string | null>
         anchor?: string | null
+        query?: string
+        stage?: number | null
     }) => {
         const nextPlan = next.plan !== undefined ? next.plan : planSeed
         const nextPicks = next.picks ?? picks
         const nextAnchor = nextPlan ? (next.anchor !== undefined ? next.anchor : planAnchorId) : null
+        const nextQuery = next.query !== undefined ? next.query : query
+        const nextStage = next.stage !== undefined ? next.stage : stageFilter
+        // q 截断与 stage 边界都在 explorer-route 一处执行，这里只传状态。
         const url = writeExplorerRoute(window.location.href, {
             tool: next.tool !== undefined ? next.tool : selected.tool.id,
             plan: nextPlan,
             picks: nextPlan && hasPicks(nextPicks) ? encodePlanPicks(nextPicks) : null,
             anchor: nextAnchor,
+            query: nextQuery.trim() ? nextQuery : null,
+            stage: nextStage,
         })
-        if (query.trim()) url.searchParams.set('q', query.slice(0, 200))
-        else url.searchParams.delete('q')
-        if (stageFilter !== null) url.searchParams.set('stage', String(stageFilter))
-        else url.searchParams.delete('stage')
         window.history.replaceState(window.history.state, '', url)
         syncedSearch.current = window.location.search
         currentPlanIdentity.current = planIdentity(nextPlan, nextPicks, nextAnchor)
@@ -241,20 +242,14 @@ export default function Dispensary() {
     const pickStage = (stage: number | null) => {
         setStageFilter(stage)
         setShowAllHabits(false)
-        const url = new URL(window.location.href)
-        if (stage === null) url.searchParams.delete('stage')
-        else url.searchParams.set('stage', String(stage))
-        window.history.replaceState(window.history.state, '', url)
-        syncedSearch.current = window.location.search
-        if (stage === null) return
-        const first = drawersInStage(stage)[0]
+        const first = stage === null ? null : drawersInStage(stage)[0]
         if (first) {
             setSelectedId(first.tool.id)
             setPeek(null)
             setFlash(null)
-            url.searchParams.set('tool', first.tool.id)
-            window.history.replaceState(window.history.state, '', url)
-            syncedSearch.current = window.location.search
+            writeUrl({ stage, tool: first.tool.id })
+        } else {
+            writeUrl({ stage })
         }
     }
 
@@ -282,13 +277,9 @@ export default function Dispensary() {
     }
 
     const updateQuery = (value: string) => {
-        const nextQuery = value.slice(0, 200)
+        const nextQuery = value.slice(0, QUERY_CAP)
         setQuery(nextQuery)
-        const url = new URL(window.location.href)
-        if (nextQuery.trim()) url.searchParams.set('q', nextQuery)
-        else url.searchParams.delete('q')
-        window.history.replaceState(window.history.state, '', url)
-        syncedSearch.current = window.location.search
+        writeUrl({ query: nextQuery })
     }
 
     const clearSearch = () => {
@@ -385,6 +376,8 @@ export default function Dispensary() {
             plan: planSeed,
             picks: planSeed && hasPicks(picks) ? encodePlanPicks(picks) : null,
             anchor: planAnchorId,
+            query: null,
+            stage: null,
         }).href
 
     const planMarkdown = () => {

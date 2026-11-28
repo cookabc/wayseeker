@@ -1,6 +1,5 @@
 import TOOLS from '../data/tools.ts'
-import { WORKFLOWS } from '../data/workflow.ts'
-import { readExplorerRoute } from './explorer-route.ts'
+import { QUERY_CAP, readExplorerRoute, writeExplorerRoute } from './explorer-route.ts'
 
 export interface ExplorationContext {
     tool: string
@@ -26,18 +25,19 @@ export function explorerReturnHref(search: string, fallbackToolId: string): stri
         return fallback
     }
     if (url.origin !== BASE || url.pathname !== '/') return fallback
+    // 参数校验与重建都交给 explorer-route：q 截断、stage 边界、plan→picks/anchor 门控
+    // 只有一份实现，这里不再复述。
     const route = readExplorerRoute(url.search, KNOWN_IDS)
-    const params = new URLSearchParams()
-    params.set('tool', route.tool ?? fallbackToolId)
-    if (route.plan) params.set('plan', route.plan)
-    if (route.plan && route.picks) params.set('p', route.picks)
-    if (route.plan && route.anchor) params.set('anchor', route.anchor)
-    const query = url.searchParams.get('q')?.slice(0, 200)
-    if (query) params.set('q', query)
-    const stage = url.searchParams.get('stage')
-    if (stage && /^[0-4]$/.test(stage) && Number(stage) < WORKFLOWS.length) params.set('stage', stage)
+    const home = writeExplorerRoute(new URL('/', BASE).href, {
+        tool: route.tool ?? fallbackToolId,
+        plan: route.plan,
+        picks: route.plan ? route.picks : null,
+        anchor: route.anchor ?? null,
+        query: route.query,
+        stage: route.stage,
+    })
     const hash = ['#counter', '#cabinet', '#prescription'].includes(url.hash) ? url.hash : '#counter'
-    return `/?${params}${hash}`
+    return `${home.pathname}${home.search}${hash}`
 }
 
 export function toolDetailHref(
@@ -45,13 +45,15 @@ export function toolDetailHref(
     context: ExplorationContext,
     anchor: 'counter' | 'cabinet' | 'prescription' = 'counter',
 ): string {
-    const params = new URLSearchParams({ tool: context.tool })
-    if (context.plan) params.set('plan', context.plan)
-    if (context.plan && context.picks) params.set('p', context.picks)
-    if (context.plan && context.anchor) params.set('anchor', context.anchor)
-    if (context.query) params.set('q', context.query.slice(0, 200))
-    if (context.stage !== null) params.set('stage', String(context.stage))
-    return `/t/${encodeURIComponent(toolId)}?${new URLSearchParams({ returnTo: `/?${params}#${anchor}` })}`
+    const home = writeExplorerRoute(new URL('/', BASE).href, {
+        tool: context.tool,
+        plan: context.plan,
+        picks: context.plan ? context.picks : null,
+        anchor: context.plan ? (context.anchor ?? null) : null,
+        query: context.query ? context.query.slice(0, QUERY_CAP) : null,
+        stage: context.stage,
+    })
+    return `/t/${encodeURIComponent(toolId)}?${new URLSearchParams({ returnTo: `/?${home.searchParams}#${anchor}` })}`
 }
 
 /** Fragment-only home links resolve against the live URL, including unsent selection changes. */
