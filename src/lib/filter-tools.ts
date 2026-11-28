@@ -15,15 +15,11 @@ export function getDomain(url: string): string {
 }
 
 /**
- * Filter the curated tool list by active tag and free-text query.
+ * Filter the curated tool list by free-text query.
  * Matches name, description, curator note, tags, and domain (real shipped path).
  */
-export function filterTools(list: Tool[], activeTag: string, searchQuery: string): Tool[] {
+export function filterTools(list: Tool[], searchQuery: string): Tool[] {
     let result = list
-
-    if (activeTag !== 'all') {
-        result = result.filter((tool) => tool.tags.includes(activeTag))
-    }
 
     if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim()

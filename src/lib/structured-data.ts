@@ -1,4 +1,4 @@
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from './site.ts'
+import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from './site.ts'
 
 /**
  * JSON-LD identity graph for the homepage: WebSite + Organization so agents can
@@ -23,7 +23,7 @@ export function buildHomeJsonLd(): Record<string, unknown> {
                 name: SITE_NAME,
                 url: SITE_URL,
                 description: SITE_DESCRIPTION,
-                email: 'chuangcius@gmail.com',
+                email: CONTACT_EMAIL,
                 logo: {
                     '@type': 'ImageObject',
                     url: `${SITE_URL}/icon.svg`,

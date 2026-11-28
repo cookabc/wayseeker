@@ -1,8 +1,5 @@
 import tools, { getRelatedTools, getToolById, getToolPath, type Tool } from '../data/tools.ts'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from './site.ts'
-
-/** Contact address published on the privacy and terms pages. */
-const CONTACT_EMAIL = 'chuangcius@gmail.com'
+import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from './site.ts'
 
 /** Request header that carries the original page path through the proxy rewrite. */
 export const MARKDOWN_PATH_HEADER = 'x-markdown-path'
@@ -189,7 +186,7 @@ export function buildLlmsTxt(): string {
         '',
         '## Site',
         '',
-        `- [Home](${SITE_URL}/): the full tool wall with search and tag filters`,
+        `- [Home](${SITE_URL}/): the full tool wall with search`,
         `- [Privacy Policy](${SITE_URL}/privacy)`,
         `- [Terms of Service](${SITE_URL}/terms)`,
         '',
@@ -206,7 +203,9 @@ export function buildToolsJson(): string {
         count: tools.length,
         tools: tools.map((tool) => ({
             id: tool.id,
-            type: tool.type,
+            // tools.json 的公共契约字段：目录中每个条目都是链接型收录，
+            // 内部 Tool 数据模型已不携带该恒定值，仅在导出处成形。
+            type: 'link',
             name: tool.name,
             description: tool.description,
             note: tool.note ?? null,

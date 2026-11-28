@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes'
 import * as React from 'react'
 import { flushSync } from 'react-dom'
 import { useI18nReady } from '@/hooks/useI18nReady'
+import { prefersReducedMotion } from '@/lib/pointer-fx'
 import { cn } from '@/lib/utils'
 
 const themeIcons: Record<string, PhosphorIcon> = {
@@ -17,10 +18,6 @@ const cycle: Record<string, string> = {
     system: 'light',
     light: 'dark',
     dark: 'system',
-}
-
-function prefersReducedMotion(): boolean {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 function startThemeTransition(

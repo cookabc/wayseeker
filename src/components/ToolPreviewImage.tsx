@@ -14,10 +14,6 @@ interface ToolPreviewImageProps {
     alt?: string
     /** Load immediately (above-the-fold mosaics) instead of lazily. */
     eager?: boolean
-    /** Extra classes merged onto the image (e.g. hover transforms). */
-    className?: string
-    /** Size classes for the fallback icon. */
-    iconClassName?: string
 }
 
 /**
@@ -25,35 +21,22 @@ interface ToolPreviewImageProps {
  * branded icon fallback when the preview file is missing. Fills its nearest
  * positioned parent — the parent owns cropping and aspect ratio.
  */
-export function ToolPreviewImage({
-    tool,
-    sizes,
-    alt = '',
-    eager = false,
-    className,
-    iconClassName = 'h-12 w-12',
-}: ToolPreviewImageProps) {
+export function ToolPreviewImage({ tool, sizes, alt = '', eager = false }: ToolPreviewImageProps) {
     const [failedId, setFailedId] = useState<string | null>(null)
     const { t } = useI18nReady()
 
     if (failedId === tool.id) {
         const Icon = getIcon(tool.icon)
-        const icon = (
-            <Icon className={iconClassName} style={{ color: tool.color }} weight="duotone" aria-hidden="true" />
-        )
+        const icon = <Icon className="h-12 w-12" style={{ color: tool.color }} weight="duotone" aria-hidden="true" />
         if (!alt) {
             return (
-                <div className={`preview-fallback is-decorative ${className ?? ''}`} aria-hidden="true">
+                <div className="preview-fallback is-decorative" aria-hidden="true">
                     {icon}
                 </div>
             )
         }
         return (
-            <div
-                className={`preview-fallback ${className ?? ''}`}
-                role="img"
-                aria-label={`${alt}. ${t('media.previewUnavailable')}`}
-            >
+            <div className="preview-fallback" role="img" aria-label={`${alt}. ${t('media.previewUnavailable')}`}>
                 {icon}
                 <span>{t('media.previewUnavailable')}</span>
             </div>
@@ -67,7 +50,7 @@ export function ToolPreviewImage({
             fill
             sizes={sizes}
             loading={eager ? 'eager' : 'lazy'}
-            className={`object-cover object-top ${className ?? ''}`}
+            className="object-cover object-top"
             onError={() => setFailedId(tool.id)}
         />
     )

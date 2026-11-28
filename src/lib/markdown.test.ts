@@ -115,3 +115,24 @@ test('tools.json is a parseable catalog covering every tool', () => {
         assert.ok(Array.isArray(entry.tags) && entry.tags.length > 0)
     }
 })
+
+test('tools.json entry keys are a locked public contract', () => {
+    // tools.json 是对外契约：键集合的增删是破坏性变更，必须显式评审而非顺手漂移。
+    const catalog = JSON.parse(buildToolsJson())
+    assert.deepEqual(Object.keys(catalog).sort(), ['count', 'description', 'languages', 'name', 'tools', 'url'])
+    for (const entry of catalog.tools) {
+        assert.deepEqual(Object.keys(entry).sort(), [
+            'description',
+            'featured',
+            'githubUrl',
+            'id',
+            'name',
+            'note',
+            'page',
+            'tags',
+            'type',
+            'url',
+        ])
+        assert.equal(entry.type, 'link', '目录中每个条目都是链接型收录（导出处成形的常量）')
+    }
+})

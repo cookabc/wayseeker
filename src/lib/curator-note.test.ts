@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import tools from '../data/tools.ts'
-import { parseVerdict, verdictOf } from './curator-note.ts'
+import { parseVerdict } from './curator-note.ts'
 
 test('every curator note splits into its three moves', () => {
     for (const tool of tools) {
@@ -72,16 +72,10 @@ test('the Chinese moves split on the Chinese markers', () => {
     }
 })
 
-test('a note without the markers falls back to one whole line', () => {
-    const verdict = verdictOf('A note with no structure at all.', 'en')
-    assert.equal(verdict.complete, false)
-    assert.equal(verdict.moves.length, 1)
-    assert.equal(verdict.moves[0].key, null)
-    assert.equal(verdict.moves[0].text, 'A note with no structure at all.')
+test('a note without the markers does not split (callers then show it whole)', () => {
+    assert.equal(parseVerdict('A note with no structure at all.', 'en'), null)
 })
 
 test('a note whose markers are out of order is not split', () => {
-    const verdict = verdictOf('Caveat: be careful. When you need it, use it. Replaces nothing.', 'en')
-    assert.equal(verdict.complete, false)
-    assert.equal(verdict.moves.length, 1)
+    assert.equal(parseVerdict('Caveat: be careful. When you need it, use it. Replaces nothing.', 'en'), null)
 })

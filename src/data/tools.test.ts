@@ -5,7 +5,6 @@ import { ICON_MAP } from '../lib/icon-map.ts'
 import tools, {
     formatTag,
     formatToolNumber,
-    getAllTags,
     getRelatedTools,
     getToolById,
     getToolNumber,
@@ -19,15 +18,6 @@ test('formatTag title-cases kebab-case tag names and keeps acronyms', () => {
     assert.equal(formatTag(''), '')
 })
 
-test('getAllTags returns the unique, sorted tag set', () => {
-    const tags = getAllTags(tools)
-    // Sorted and de-duplicated.
-    const sorted = [...tags].sort()
-    assert.deepEqual(tags, sorted)
-    assert.equal(new Set(tags).size, tags.length)
-    assert.ok(tags.length > 0)
-})
-
 test('every tool has complete bilingual fields, a valid icon, and a preview', () => {
     const ids = new Set<string>()
     const urls = new Set<string>()
@@ -39,10 +29,6 @@ test('every tool has complete bilingual fields, a valid icon, and a preview', ()
         assert.ok(!ids.has(tool.id), `duplicate tool id: ${tool.id}`)
         ids.add(tool.id)
 
-        assert.ok(
-            tool.category === 'design' || tool.category === 'games' || tool.category === 'other',
-            `tool "${tool.id}" has an invalid category`,
-        )
         assert.ok(tool.tags.length > 0, `tool "${tool.id}" has no tags`)
         assert.ok(tool.icon in ICON_MAP, `tool "${tool.id}" has unknown icon ${tool.icon}`)
         assert.match(tool.url, /^https?:\/\//, `tool "${tool.id}" has an invalid url`)

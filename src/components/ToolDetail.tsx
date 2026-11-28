@@ -128,7 +128,6 @@ export function ToolDetail({ tool }: { tool: Tool }) {
                     code: drawer?.code ?? '',
                     label: t('detail.whyIUseIt'),
                     attributionLabel: t('detail.curatorAttribution', { domain }).split(/[,，]/)[0].trim(),
-                    color: tool.color,
                     brand: 'Wayseeker',
                 },
                 controller.signal,

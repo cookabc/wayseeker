@@ -1,0 +1,85 @@
+# 架构降熵治理 · 进度文件（031_wayfinder / Wayseeker）
+
+> 目标：把 Wayseeker 演进为高度规整、极易理解、极易维护、适合大量 Agent 并行开发的工程系统。
+> 方法：扫描 → 熵清单 → 方案比选 → 行为基线 → 完整迁移 → 删除旧实现 → 独立复审 → 验证 → 防回归约束。
+> 约束：所有重构在隔离 worktree 分支 `governance/arch-20261128` 上进行，每批有效改进独立 commit；
+> 每轮收尾 `pnpm run check`（biome → tsc → build → node:test）全绿方可提交；涉及交互行为的轮次
+> 追加 `pnpm test:e2e:built` 回归。禁止新增运行时依赖。
+
+## 基线（2026-11-28，main@360f179）
+
+- 测试：node:test 全绿（worktree 复验同绿）；e2e 18 个 spec / 210+ 用例（桌面+手机双视口）
+  为行为基线，未触碰。
+- 结构：`src/data`（tools 目录、workflow 舞台 = 内容单源）、`src/lib`（drawers/explorer-route/
+  exploration-context/plan/markdown/curator-note/note-card-image/pointer-fx 等深模块，均有配套
+  node:test）、`src/components`（Dispensary 主探索器 + 标签页/抽屉/复制恢复等）、`src/app`
+  （路由 + markdown 内容协商 proxy）、`public/puzzles`（独立静态区，不在本轮范围）。
+- 生产约束：工具目录与策展注记是唯一内容资产；`/tools.json`、`/llms.txt`、`Accept: text/markdown`
+  是对外契约，输出必须字节级兼容；视觉 token 权威在 DESIGN.md，样式集中在 globals.css；
+  `pnpm run check` 与 CI 完全一致（ci-gate 模式）。
+
+## 熵清单（勘察报告 2026-11-28，随轮次滚动收敛）
+
+- **E1 旧 IA 残留 `category` 族**：`Tool.category` + `ToolCategory` + `getToolCategory` +
+  `groupToolsByCategory` + `CATEGORY_ORDER` + `CATEGORY_LABELS` 无任何 UI/路由/导出读取；
+  PRODUCT.md 明言「按工作流而非分类组织」。仅数据完整性测试在读。
+- **E2 `getAllTags`**：0 生产调用方（标签筛选 UI 不存在）。
+- **E3 `filterTools` 的 `activeTag` 参数**：唯一调用方恒传 `'all'`；llms.txt 文案却宣称
+  「with search and tag filters」——文案与实现双双指向不存在的功能。
+- **E4 `verdictOf`/`VerdictLine`**：`parseVerdict` 之上的平行 API，渲染全走
+  `labelOf`/`habitOf`，该导出仅被自己的测试调用。
+- **E5 `encodeSeed`**：仅 round-trip 自测调用。
+- **E6 `ExplorerRoute.seed` 与 `?seed=` 读写**：plan 取代旧 shuffle 浏览后无读取方；
+  Dispensary 恒写 `seed: null`。shuffle.ts 头注释仍宣称「seed 可复现浏览顺序」。
+- **E7 `WORKFLOW_BY_TOOL`**：0 调用方。
+- **E8 `toolWorkflowIndex`**：仅测试调用。
+- **E9 `WORKFLOWS[].description`**：双语文案无渲染方（cabinet 用 name+question）。
+- **E10 `DrawerFront.dim` prop**：无调用方传。
+- **E11 `ToolPreviewImage.className/iconClassName`**：无调用方传参，仅默认值生效。
+- **E12 `NoteCardData.color`**：注释自认「kept for callers; unused」。
+- **E13 孤儿 CSS 块**：`.index-label`、`.display-heading`、`.cabinet-reset`、`.rx-anchor`、
+  `.insert`/`.insert-grid`/`.insert-title`/`.insert h3`/`.insert p`（`.insert-links` 在用，保留）。
+- **E14 `@theme` 未用 token**：`--color-background`/`--color-muted-foreground`/`--color-primary`/
+  `--color-border`/`--font-sans`/`--font-mono`/`--default-transition-duration` 无人消费
+  （仅 `--color-foreground` 经 `text-foreground` 使用）。
+- **E15 `pointer-fx` 写 `--gy` 无消费者**：glint 渐变只读 `--gx`。
+- **E16 探索器 URL 状态知识分裂**：`?q`（cap 200 ×4）、`?stage`（Dispensary `/^[0-4]$/`
+  魔法正则 vs exploration-context 用 `WORKFLOWS.length`）、URLSearchParams+replaceState+
+  syncedSearch 手写舞步 ×4。explorer-route 只管 tool/plan/p/anchor，q/stage 散布在外。
+- **E17 联系邮箱 3 处字面量**：markdown.ts CONTACT_EMAIL / structured-data.ts / LegalPage.tsx（href+text）。
+- **E18 prefers-reduced-motion 手写 5 处**：Dispensary.reducedMotion、theme-switch
+  .prefersReducedMotion、Header 内联、HabitPeek 监听、pointer-fx.enabled 内部。
+- **E20 内部恒定字段 `type: 'link'`**：Tool 接口与 30 条数据各带一份恒定值，唯一读取方是
+  tools.json 导出（对外契约字段）。→ 内部删除，导出处成形为常量并注明契约语义。
+- **E19 对外契约无形状锁**：tools.json 键集合无契约测试，公共 JSON 结构可无意识漂移
+  （type 字段去留这类决定无防回归承载点）。
+
+## 终态（2026-11-28，治理收敛）
+
+- 测试：node:test 92 pass / 0 fail（基线 86 + 6 新契约），e2e 全量绿（最终轮 + 每轮提交前）。
+- 分支 governance/arch-20261128 共 6 个 commit（R0-R5），净 -150 行（+287/−437）。
+- 单源收口：explorer-route（探索器 URL 契约唯一权威：tool/plan/p/anchor/q/stage 读写、
+  QUERY_CAP、stage 边界）、site.CONTACT_EMAIL、pointer-fx.prefersReducedMotion、
+  tools.json 导出处 type 常量成形（对外契约字节级不变，已验证）。
+- 死代码出清：旧 IA category 族（字段+类型+4 函数）、getAllTags、activeTag 参数、
+  verdictOf 平行 API、encodeSeed、?seed= 路由读取、WORKFLOW_BY_TOOL、toolWorkflowIndex、
+  WORKFLOWS[].description 无渲染文案、dim/className/iconClassName/color 无调用方 props、
+  孤儿 CSS 7 组 + .habit/.drawer.is-dim、@theme 7 个无消费 token、--gy 死写。
+- 防回归约束新增：tools.json 键集合锁（公共契约显式化）、globals.css 孤儿选择器扫描
+  （词边界匹配，防子串误活）、explorer-route q/stage 契约、curator-note 回退语义
+  由 parseVerdict 直接锁定。
+- 明释不收敛 2 项（见任务池）：puzzles 键盘 e2e 首轮冷启动时序抖动（独立静态区，
+  本轮未触碰；复跑与 CI 稳定）、llms.txt 双语工具行未含 zh 描述（现状输出即契约，
+  补 zh 需产品决策）。
+
+## 轮次记录
+
+## 轮次记录
+
+| 轮 | 内容 | Commit |
+| --- | --- | --- |
+| R4 | 单源收口：联系邮箱 3 处字面量 → site.ts CONTACT_EMAIL（法律页/JSON-LD/markdown 导出同一权威）；prefersReducedMotion 布尔判定 4 处手写 → pointer-fx 出口（HabitPeek 需要活 MQL 对象做变化监听，属另一种用法，保留并注释）；shuffle 注释已随 R1 改为 plan 语义；e2e 全量绿 | b4cc373 |
+| R5 | 防回归约束 + 独立复审：tools.json 键集合契约锁（含 type='link' 常量语义锁定）、globals.css 孤儿选择器扫描契约（词边界）；独立复审全量 diff 无行为滑移；e2e 最终轮全量绿 | (本 commit) |
+| R3 | 探索器 URL 状态收口：explorer-route 接管 ?q（QUERY_CAP=200 单一上限）与 ?stage（单位数字 + WORKFLOWS.length 边界，替代 Dispensary `/^[0-4]$/` 魔法正则与 exploration-context 的重复校验）；readExplorerRoute/writeExplorerRoute 成为探索器 URL 契约唯一权威；exploration-context 的 returnTo 重建与 toolDetailHref 全部改走 route 模块；Dispensary 的 restoreRoute/writeUrl/pickStage/updateQuery 四处手写 URLSearchParams 舞步收敛为 writeUrl 单入口（pickStage 两次 replaceState 合并为一次）；+2 契约测试（q 截断/stage 边界/往返清除）；e2e 全量绿 | (本 commit) |
+| R2 | 组件与 CSS 死代码出清：DrawerFront.dim prop（.habit.is-dim/.drawer.is-dim 双孤儿规则同删）、ToolPreviewImage className/iconClassName 无调用方 props、NoteCardData.color（注释自认未用）、pointer-fx --gy 死写、孤儿 CSS 块 7 组（.index-label/.display-heading/.measure/.cabinet-reset/.rx-anchor/.insert 家族减 .insert-links）、@theme 裁剪至实际消费的 --color-foreground；测试同步 | (本 commit) |
+| R1 | 数据模型死代码出清：旧 IA `category` 族（字段+类型+4 函数）、`getAllTags`、`filterTools` activeTag 参数收窄、`verdictOf` 平行 API、`encodeSeed`、`?seed=` 路由读取（write 保留遗留参数清理）、`WORKFLOW_BY_TOOL`、`toolWorkflowIndex`、`WORKFLOWS[].description` 无渲染文案、内部恒定字段 `type: 'link'`（tools.json 字节级不变已验证）、llms.txt「tag filters」失实文案对齐；测试同步收敛 | (本 commit) |
