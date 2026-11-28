@@ -72,7 +72,23 @@
   本轮未触碰；复跑与 CI 稳定）、llms.txt 双语工具行未含 zh 描述（现状输出即契约，
   补 zh 需产品决策）。
 
+## 第二遍（2026-11-28，R6 补记）
+
+- 级联死导出全量复扫：10 个候选全部为 Next.js 框架约定导出（页面组件 /
+  generateMetadata / proxy config 等，由框架消费而非 import），零真死代码。
+- CSS 孤儿守卫复验 91 pass；tools.json 契约锁随每轮 CI 运行。
+- 结论：R0-R5 后熵面已收敛，剩余均为明释不收敛项（llms.txt zh 描述需产品决策、
+  puzzles e2e 冷启动时序抖动为环境性）。
+
 ## 轮次记录
+
+## 第二遍（2026-11-28，R6 补记）
+
+- 级联死导出全量复扫：10 个候选全部为 Next.js 框架约定导出（页面组件 /
+  generateMetadata / proxy config 等，由框架消费而非 import），零真死代码。
+- CSS 孤儿守卫复验 91 pass；tools.json 契约锁随每轮 CI 运行。
+- 结论：R0-R5 后熵面已收敛，剩余均为明释不收敛项（llms.txt zh 描述需产品决策、
+  puzzles e2e 冷启动时序抖动为环境性）。
 
 ## 轮次记录
 
